@@ -1,6 +1,6 @@
-using QuadMeshGame
 using Test
 
-@testset "QuadMeshGame.jl" begin
-    # Write your tests here.
+@testset "square mesh" begin
+    include("test_square_mesh.jl")
 end
+
