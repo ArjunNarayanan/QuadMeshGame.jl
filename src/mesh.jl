@@ -1,0 +1,148 @@
+mutable struct QuadMesh
+    vertices::Any
+    connectivity::Any
+    q2q::Any
+    e2e::Any
+    degree::Any
+    vertex_on_boundary::Any
+    active_vertex::Any
+    active_quad::Any
+    num_vertices::Any
+    num_quads::Any
+    growth_factor::Any
+    function QuadMesh(
+        vertices,
+        connectivity,
+        q2q,
+        e2e,
+        degree,
+        vertex_on_boundary;
+        quad_buffer = 100,
+        vertex_buffer = 150,
+        growth_factor = 2,
+    )
+        num_vertices = size(vertices, 2)
+        num_quads = size(connectivity, 2)
+
+        @assert num_vertices <= vertex_buffer
+        @assert num_quads <= quad_buffer
+        @assert size(vertices, 1) == 2
+        @assert size(connectivity, 1) == 4
+        @assert size(q2q, 1) == 4
+        @assert size(e2e, 1) == 4
+        @assert size(q2q, 2) == num_quads
+        @assert size(e2e, 2) == num_quads
+        @assert length(degree) == num_vertices
+        @assert length(vertex_on_boundary) == num_vertices
+
+        _vertices = zeros(2, vertex_buffer)
+        _vertices[:, 1:num_vertices] .= vertices
+
+        _connectivity = zeros(Int, 4, quad_buffer)
+        _connectivity[:, 1:num_quads] .= connectivity
+
+        _q2q = zeros(Int, 4, quad_buffer)
+        _q2q[:, 1:num_quads] .= q2q
+
+        _e2e = zeros(Int, 4, quad_buffer)
+        _e2e[:, 1:num_quads] .= e2e
+
+        _degree = zeros(Int, vertex_buffer)
+        _degree[1:num_vertices] .= degree
+
+        _vertex_on_boundary = falses(vertex_buffer)
+        _vertex_on_boundary[1:num_vertices] .= vertex_on_boundary
+
+        active_vertex = falses(vertex_buffer)
+        active_vertex[1:num_vertices] .= true
+
+        active_quad = falses(quad_buffer)
+        active_quad[1:num_quads] .= true
+
+        new(
+            _vertices,
+            _connectivity,
+            _q2q,
+            _e2e,
+            _degree,
+            _vertex_on_boundary,
+            active_vertex,
+            active_quad,
+            num_vertices,
+            num_quads,
+            growth_factor,
+        )
+    end
+end
+
+function number_of_vertices(mesh::QuadMesh)
+    return mesh.num_vertices
+end
+
+function number_of_quads(mesh::QuadMesh)
+    return mesh.num_quads
+end
+
+function quad_buffer(mesh::QuadMesh)
+    return size(mesh.connectivity, 2)
+end
+
+function vertex_buffer(mesh::QuadMesh)
+    return size(mesh.vertices, 2)
+end
+
+function growth_factor(mesh::QuadMesh)
+    return mesh.growth_factor
+end
+
+function Base.show(io::IO, mesh::QuadMesh)
+    nv = number_of_vertices(mesh)
+    nq = number_of_quads(mesh)
+
+    println(io, "QuadMesh")
+    println(io, "\tNum Vert : $nv")
+    println(io, "\tNum Quad : $nq")
+end
+
+function expand_quad!(mesh::QuadMesh)
+    qb = quad_buffer(mesh)
+
+    new_quad_buff_size = growth_factor(mesh) * qb
+
+    _connectivity = zeros(Int, 4, new_quad_buff_size)
+    _connectivity[:, 1:qb] .= mesh.connectivity
+    mesh.connectivity = _connectivity
+
+    _q2q = zeros(Int, 4, new_quad_buff_size)
+    _q2q[:, 1:qb] .= mesh.q2q
+    mesh.q2q = _q2q
+
+    _e2e = zeros(Int, 4, new_quad_buff_size)
+    _e2e[:, 1:qb] .= mesh.e2e
+    mesh.e2e = _e2e
+
+    active_quad = falses(new_quad_buff_size)
+    active_quad[1:qb] .= mesh.active_quad
+    mesh.active_quad = active_quad
+end
+
+function expand_vertices!(mesh::QuadMesh)
+    vb = vertex_buffer(mesh)
+    new_vert_buff_size = growth_factor(mesh) * vb
+
+    _vertices = zeros(2, new_vert_buff_size)
+    _vertices[:, 1:vb] .= mesh.vertices
+    mesh.vertices = _vertices
+
+    _degree = zeros(Int, new_vert_buff_size)
+    _degree[1:vb] .= mesh.degree
+    mesh.degree = _degree
+
+    _vertex_on_boundary = falses(new_vert_buff_size)
+    _vertex_on_boundary[1:vb] .= mesh.vertex_on_boundary
+    mesh.vertex_on_boundary = _vertex_on_boundary
+
+    active_vertex = falses(new_vert_buff_size)
+    active_vertex[1:vb] .= mesh.active_vertex
+    mesh.active_vertex = active_vertex
+end
