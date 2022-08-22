@@ -146,3 +146,49 @@ function expand_vertices!(mesh::QuadMesh)
     active_vertex[1:vb] .= mesh.active_vertex
     mesh.active_vertex = active_vertex
 end
+
+function is_active_quad(mesh::QuadMesh, quad)
+    return mesh.active_quad[quad]
+end
+
+function has_neighbor(mesh::QuadMesh, quad, edge)
+    nbr_qidx = mesh.q2q[quad,edge]
+    if nbr_qidx == 0
+        return false
+    elseif !is_active_quad(mesh, nbr_qidx)
+        @warn "Quad $quad referencing inactive quad $nbr_qidx across edge $edge"
+        return false
+    else
+        return true
+    end
+end
+
+function vertex(mesh::QuadMesh, quad, local_ver_idx)
+    return mesh.connectivity[local_ver_idx,quad]
+end
+
+function next_cyclic_vertices(v1)
+    v2 = next(v1)
+    v3 = next(v2)
+    v4 = next(v3)
+    return v1, v2, v3, v4
+end
+
+function prev_cyclic_vertices(v1)
+    v2 = previous(v1)
+    v3 = previous(v2)
+    v4 = previous(v3)
+    return v1, v2, v3, v4
+end
+
+function degree(mesh::QuadMesh, vertex)
+    return mesh.degree[vertex]
+end
+
+function neighbor(mesh::QuadMesh, quad, edge)
+    return mesh.q2q[edge, quad]
+end
+
+function twin(mesh::QuadMesh, quad, edge)
+    return mesh.e2e[edge, quad]
+end
