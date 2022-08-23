@@ -151,8 +151,12 @@ function is_active_quad(mesh::QuadMesh, quad)
     return mesh.active_quad[quad]
 end
 
+function is_active_vertex(mesh::QuadMesh, vertex)
+    return mesh.active_vertex[vertex]
+end
+
 function has_neighbor(mesh::QuadMesh, quad, edge)
-    nbr_qidx = mesh.q2q[quad,edge]
+    nbr_qidx = mesh.q2q[edge,quad]
     if nbr_qidx == 0
         return false
     elseif !is_active_quad(mesh, nbr_qidx)
@@ -191,4 +195,13 @@ end
 
 function twin(mesh::QuadMesh, quad, edge)
     return mesh.e2e[edge, quad]
+end
+
+function vertex_on_boundary(mesh::QuadMesh, idx)
+    return mesh.vertex_on_boundary[idx]
+end
+
+function set_vertex!(mesh::QuadMesh, quad, local_ver_idx, vertex)
+    @assert is_active_vertex(mesh, vertex)
+    mesh.connectivity[local_ver_idx,quad] = vertex
 end
