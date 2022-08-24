@@ -151,6 +151,10 @@ function is_active_quad(mesh::QuadMesh, quad)
     return mesh.active_quad[quad]
 end
 
+function is_active_quad_or_boundary(mesh::QuadMesh, quad)
+    return quad == 0 || is_active_quad(mesh, quad)
+end
+
 function is_active_vertex(mesh::QuadMesh, vertex)
     return mesh.active_vertex[vertex]
 end
@@ -204,4 +208,37 @@ end
 function set_vertex!(mesh::QuadMesh, quad, local_ver_idx, vertex)
     @assert is_active_vertex(mesh, vertex)
     mesh.connectivity[local_ver_idx,quad] = vertex
+end
+
+function set_neighbor!(mesh::QuadMesh, quad, local_ver_idx, nbr_quad)
+    @assert is_active_quad(mesh, quad)
+    @assert is_active_quad_or_boundary(mesh,nbr_quad)
+    mesh.q2q[local_ver_idx,quad] = nbr_quad
+end
+
+function set_neighbor_if_not_boundary!(mesh::QuadMesh, quad, local_ver_idx, nbr_quad)
+    if quad != 0 && local_ver_idx != 0
+        set_neighbor!(mesh, quad, local_ver_idx, nbr_quad)
+    end
+end
+
+function set_twin!(mesh::QuadMesh, quad, local_ver_idx, nbr_twin)
+    @assert is_active_quad(mesh, quad)
+    mesh.e2e[local_ver_idx,quad] = nbr_twin
+end
+
+function set_twin_if_not_boundary!(mesh::QuadMesh, quad, local_ver_idx, nbr_twin)
+    if quad != 0 && local_ver_idx != 0
+        set_twin!(mesh, quad, local_ver_idx, nbr_twin)
+    end
+end
+
+function increment_degree!(mesh::QuadMesh, vertex)
+    @assert is_active_vertex(mesh, vertex)
+    mesh.degree[vertex] += 1
+end
+
+function decrement_degree!(mesh::QuadMesh, vertex)
+    @assert is_active_vertex(mesh, vertex)
+    mesh.degree[vertex] -= 1
 end
