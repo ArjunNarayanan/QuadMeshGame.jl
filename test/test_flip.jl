@@ -1,4 +1,4 @@
-using Revise
+# using Revise
 using Test
 using QuadMeshGame
 include("useful_routines.jl")
@@ -134,7 +134,6 @@ test_e2e = [
 
 
 
-using BenchmarkTools
 mesh = QM.square_mesh(2)
 @test QM.right_flip!(mesh, 2, 1)
 test_conn = [
@@ -187,3 +186,4 @@ test_e2e = [
     0 0 2 0
 ]
 @test allequal(mesh.e2e[:, 1:4], test_e2e)
+
