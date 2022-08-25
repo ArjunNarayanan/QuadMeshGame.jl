@@ -13,3 +13,10 @@ mesh = QM.square_mesh(2)
 
 mesh.degree[5] = 2
 @test !QM.is_valid_split(mesh, 1, 3, maxdegree)
+@test QM.is_valid_split(mesh, 3, 3, maxdegree)
+@test !QM.is_valid_split(mesh, 3, 3, 2)
+
+mesh = QM.square_mesh(2)
+@test QM.is_valid_split(mesh, 4, 1, 7)
+mesh.degree[6] = 7
+@test !QM.is_valid_split(mesh, 4, 1, 7)

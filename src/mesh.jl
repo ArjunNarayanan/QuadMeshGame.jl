@@ -175,6 +175,10 @@ function vertex(mesh::QuadMesh, quad, local_ver_idx)
     return mesh.connectivity[local_ver_idx,quad]
 end
 
+function vertex_coordinates(mesh::QuadMesh, vertex)
+    return mesh.vertices[:,vertex]
+end
+
 function next_cyclic_vertices(v1)
     v2 = next(v1)
     v3 = next(v2)
@@ -241,4 +245,18 @@ end
 function decrement_degree!(mesh::QuadMesh, vertex)
     @assert is_active_vertex(mesh, vertex)
     mesh.degree[vertex] -= 1
+end
+
+function insert_vertex!(mesh::QuadMesh, coords, deg, on_boundary)
+    new_idx = number_of_vertices(mesh) + 1
+    if new_idx > vertex_buffer(mesh)
+        expand_vertices!(mesh)
+    end
+    @assert new_idx <= vertex_buffer(mesh)
+
+    mesh.vertices[:,new_idx] .= coords
+    mesh.degree[new_idx] = deg
+    mesh.active_vertex[new_idx] = true
+    mesh.vertex_on_boundary[new_idx] = false
+    mesh.num_vertices += 1
 end
