@@ -39,7 +39,28 @@ function split!(mesh, quad, edge, maxdegree = 7)
     v5, v6, v7, v8 = (vertex(mesh, opp_quad, i) for i in (l5, l6, l7, l8))
 
     new_coords = new_vertex_coordinates(mesh, v1, v2)
-    insert_vertex!(mesh, new_coords, 3, false)
+    v9 = insert_vertex!(mesh, new_coords, 3, false)
 
-    error("Incomplete")
+    set_vertex!(mesh, quad, l1, v9)
+    set_vertex!(mesh, opp_quad, l6, v9)
+
+    q1, q2, q3, q4 = (neighbor(mesh, quad, i) for i in (l1, l2, l3, l4))
+    q5, q6, q7, q8 = (neighbor(mesh, opp_quad, i) for i in (l5, l6, l7, l8))
+
+    ol1, ol2, ol3, ol4 = (twin(mesh, quad, i) for i in (l1, l2, l3, l4))
+    ol5, ol6, ol7, ol8 = (twin(mesh, opp_quad, i) for i in (l5, l6, l7, l8))
+
+    new_quad_idx = insert_quad!(mesh, (v9, v4, v1, v7), (quad, q4, q6, opp_quad), (l4, ol4, ol6, l6))
+
+    set_neighbor!(mesh, quad, l4, new_quad_idx)
+    set_neighbor!(mesh, opp_quad, l6, new_quad_idx)
+    set_neighbor!(mesh, q4, ol4, new_quad_idx)
+    set_neighbor!(mesh, q6, ol6, new_quad_idx)
+
+    set_twin!(mesh, quad, l4, 1)
+    set_twin!(mesh, opp_quad, l6, 4)
+    set_twin!(mesh, q4, ol4, 2)
+    set_twin!(mesh, q6, ol6, 3)
+
+    return true
 end

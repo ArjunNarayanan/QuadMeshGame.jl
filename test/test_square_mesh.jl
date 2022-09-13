@@ -87,3 +87,48 @@ QM.expand_quad!(mesh)
 @test allequal(mesh.e2e[:,1:4], test_e2e)
 @test allequal(mesh.active_quad, [test_active_quad; falses(10)])
 @test mesh.num_quads == 4
+
+
+mesh = QM.square_mesh(2, quad_buffer = 4, vertex_buffer = 9, growth_factor = 2)
+new_idx = QM.insert_vertex!(mesh, [0.25, 0.5], 3, false)
+@test new_idx == 10
+@test QM.vertex_buffer(mesh) == 18
+@test QM.number_of_vertices(mesh) == 10
+testvertices = [
+    0.0 0.0 0.0 0.5 0.5 0.5 1.0 1.0 1.0 0.25
+    0.0 0.5 1.0 0.0 0.5 1.0 0.0 0.5 1.0 0.5
+]
+@test allequal(testvertices, mesh.vertices[:,1:10])
+@test QM.quad_buffer(mesh) == 4
+@test !QM.vertex_on_boundary(mesh, 10)
+@test QM.is_active_vertex(mesh, 10)
+
+new_idx = QM.insert_quad!(mesh, [10,4,5,6], [1,3,4,2], [2, 4, 4, 2])
+@test new_idx == 5
+@test QM.quad_buffer(mesh) == 8
+@test QM.number_of_quads(mesh) == 5
+
+testconn = [
+    1 2 4 5 10
+    4 5 7 8 4
+    5 6 8 9 5
+    2 3 5 6 6
+]
+@test allequal(mesh.connectivity[:,1:5], testconn)
+
+test_q2q = [
+    0 1 0 3 1
+    3 4 0 0 3
+    2 0 4 0 4
+    0 0 1 2 2
+]
+@test allequal(mesh.q2q[:,1:5], test_q2q)
+
+test_e2e = [
+    0 3 0 3 2
+    4 4 0 0 4
+    1 0 1 0 4
+    0 0 2 2 2
+]
+@test allequal(mesh.e2e[:,1:5], test_e2e)
+@test QM.is_active_quad(mesh, 5)
