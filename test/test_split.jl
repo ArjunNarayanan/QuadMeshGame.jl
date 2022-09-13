@@ -25,6 +25,7 @@ mesh = QM.square_mesh(2)
 @test QM.split!(mesh, 1, 3)
 @test QM.number_of_quads(mesh) == 5
 @test QM.number_of_vertices(mesh) == 10
+@test all(mesh.active_quad[1:5])
 
 testvertices = [
     0.0 0.0 0.0 0.5 0.5 0.5 1.0 1.0 1.0 0.25
@@ -61,6 +62,7 @@ mesh = QM.square_mesh(2)
 
 @test QM.number_of_quads(mesh) == 5
 @test QM.number_of_vertices(mesh) == 10
+@test all(mesh.active_quad[1:5])
 
 testvertices = [
     0.0 0.0 0.0 0.5 0.5 0.5 1.0 1.0 1.0 0.75
@@ -97,6 +99,7 @@ mesh = QM.square_mesh(2)
 
 @test QM.number_of_quads(mesh) == 5
 @test QM.number_of_vertices(mesh) == 10
+@test all(mesh.active_quad[1:5])
 
 testvertices = [
     0.0 0.0 0.0 0.5 0.5 0.5 1.0 1.0 1.0 0.5

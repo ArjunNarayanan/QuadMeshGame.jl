@@ -11,3 +11,7 @@ end
 @testset "test split" begin
     include("test_split.jl")
 end
+
+@testset "test collapse" begin
+    include("test_collapse.jl")
+end
