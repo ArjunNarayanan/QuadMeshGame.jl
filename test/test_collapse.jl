@@ -44,9 +44,31 @@ testvertices = [
 @test allequal(QM.active_vertex_coordinates(mesh), testvertices)
 
 testconn = [
-    2  1 1
-    1  4 8
-    6  7 9
-    3  8 6
+    2  4 1
+    1  7 8
+    6  8 9
+    3  1 6
 ]
 active_conn = QM.active_quad_connectivity(mesh)
+@test allequal(active_conn, testconn)
+
+test_q2q = [0 0 3
+            4 0 0
+            0 4 0
+            0 0 2]
+active_q2q = QM.active_quad_q2q(mesh)
+@test allequal(test_q2q, active_q2q)
+
+test_e2e = [0 0 3
+            4 0 0
+            0 1 0
+            0 0 2]
+active_e2e = QM.active_quad_e2e(mesh)
+@test allequal(active_e2e, test_e2e)
+
+test_degree = [4,2,2,2,3,2,3,2]
+active_vertex_degrees = QM.active_vertex_degrees(mesh)
+@test allequal(test_degree, active_vertex_degrees)
+
+test_on_boundary = trues(8)
+@test allequal(mesh.vertex_on_boundary[mesh.active_vertex], test_on_boundary)

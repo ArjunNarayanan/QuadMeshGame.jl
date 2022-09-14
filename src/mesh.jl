@@ -189,6 +189,14 @@ function active_quad_connectivity(mesh::QuadMesh)
     return mesh.connectivity[:, mesh.active_quad]
 end
 
+function active_quad_q2q(mesh::QuadMesh)
+    return mesh.q2q[:, mesh.active_quad]
+end
+
+function active_quad_e2e(mesh::QuadMesh)
+    return mesh.e2e[:, mesh.active_quad]
+end
+
 function next_cyclic_vertices(v1)
     v2 = next(v1)
     v3 = next(v2)
@@ -206,6 +214,10 @@ end
 function degree(mesh::QuadMesh, vertex)
     @assert is_active_vertex(mesh, vertex)
     return mesh.degree[vertex]
+end
+
+function active_vertex_degrees(mesh)
+    return mesh.degree[mesh.active_vertex]
 end
 
 function neighbor(mesh::QuadMesh, quad, edge)
@@ -275,6 +287,11 @@ function set_coordinates!(mesh::QuadMesh, idx, coords)
     mesh.vertices[:, idx] .= coords
 end
 
+function set_on_boundary!(mesh, vertex, on_boundary)
+    @assert is_active_vertex(mesh, vertex)
+    mesh.vertex_on_boundary[vertex] = on_boundary
+end
+
 function insert_vertex!(mesh::QuadMesh, coords, deg, on_boundary)
     new_idx = number_of_vertices(mesh) + 1
     if new_idx > vertex_buffer(mesh)
@@ -320,4 +337,8 @@ function delete_quad!(mesh::QuadMesh, idx)
     @assert is_active_quad(mesh, idx)
     mesh.active_quad[idx] = false
     mesh.num_quads -= 1
+end
+
+function replace_index_in_vertex_connectivity!(mesh, old_vertex_idx, new_vertex_idx)
+    mesh.connectivity[mesh.connectivity .== old_vertex_idx] .= new_vertex_idx
 end

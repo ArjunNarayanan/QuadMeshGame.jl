@@ -53,12 +53,17 @@ function collapse!(mesh, quad, edge, maxdegree = 7)
     dv1 = degree(mesh, v1) + degree(mesh, v3) - 2
     set_degree!(mesh, v1, dv1)
 
-    # change connectivity of neighbors if not boundary 
+    # replace v3 with v1 in connectivity matrix
+    replace_index_in_vertex_connectivity!(mesh, v3, v1)
+
+    # if v3 on boundary, set v1 to be on boundary 
+    if vertex_on_boundary(mesh, v3)
+        set_on_boundary!(mesh, v1, true)
+    end
+
     ol1, ol2, ol3, ol4 = (twin(mesh, quad, i) for i in (l1, l2, l3, l4))
     q1, q2, q3, q4 = (neighbor(mesh, quad, i) for i in (l1, l2, l3, l4))
-    set_vertex_if_not_boundary!(mesh, q2, ol2, v1)
-    set_vertex_if_not_boundary!(mesh, q3, next(ol3), v1)
-
+    
     # change q2q of neighbors if not boundary
     for (q, ol, nq) in zip((q1, q2, q3, q4), (ol1, ol2, ol3, ol4), (q2, q1, q4, q3))
         set_neighbor_if_not_boundary!(mesh, q, ol, nq)
