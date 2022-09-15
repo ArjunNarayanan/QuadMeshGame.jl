@@ -32,10 +32,12 @@ mesh = QM.square_mesh(2)
 test_active_vertex = trues(9)
 test_active_vertex[5] = false
 @test allequal(mesh.active_vertex[1:9], test_active_vertex)
+@test count(mesh.active_vertex) == 8
 
 test_active_quad = trues(4)
 test_active_quad[1] = false
 @test allequal(mesh.active_quad[1:4], test_active_quad)
+@test count(mesh.active_quad) == 3
 
 testvertices = [
     0.0 0.0 0.0 0.5 0.5 1.0 1.0 1.0
@@ -72,3 +74,46 @@ active_vertex_degrees = QM.active_vertex_degrees(mesh)
 
 test_on_boundary = trues(8)
 @test allequal(mesh.vertex_on_boundary[mesh.active_vertex], test_on_boundary)
+
+
+mesh = QM.square_mesh(2)
+@test QM.split!(mesh, 1, 3)
+@test QM.collapse!(mesh, 5, 1, 7)
+@test QM.number_of_quads(mesh) == 4
+@test QM.number_of_vertices(mesh) == 9
+
+test_active_vertex = trues(10)
+test_active_vertex[5] = false
+@test allequal(test_active_vertex, mesh.active_vertex[1:10])
+@test count(mesh.active_vertex) == 9
+
+test_active_quad = trues(4)
+@test allequal(mesh.active_quad[1:4], test_active_quad)
+@test count(mesh.active_quad) == 4
+
+testvertices = testvertices = [
+    0.0 0.0 0.0 0.5 0.5 1.0 1.0 1.0 0.375
+    0.0 0.5 1.0 0.0 1.0 0.0 0.5 1.0 0.5
+]
+@test allequal(testvertices, QM.active_vertex_coordinates(mesh))
+
+testconn = [1  2  4  10
+            4  10 7  8
+            10  6 8  9
+            2   3 10 6]
+@test allequal(testconn, QM.active_quad_connectivity(mesh))
+
+test_q2q = [0 1 0 3
+            3 4 0 0
+            2 0 4 0
+            0 0 1 2]
+@test allequal(test_q2q, QM.active_quad_q2q(mesh))
+
+test_e2e = [0 3 0 3
+            4 4 0 0
+            1 0 1 0
+            0 0 2 2]
+@test allequal(test_e2e, QM.active_quad_e2e(mesh))
+
+test_degree = [2,3,2,3,3,2,3,2,4]
+@test allequal(test_degree, QM.active_vertex_degrees(mesh))

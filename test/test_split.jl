@@ -56,6 +56,9 @@ test_q2q = [
 ]
 @test allequal(test_q2q, mesh.q2q[:,1:5])
 
+test_degree = [2,3,2,4,3,4,2,3,2,3]
+@test allequal(test_degree, QM.active_vertex_degrees(mesh))
+
 
 mesh = QM.square_mesh(2)
 @test QM.split!(mesh, 4, 1)
@@ -69,6 +72,10 @@ testvertices = [
     0.0 0.5 1.0 0.0 0.5 1.0 0.0 0.5 1.0 0.5
 ]
 @test allequal(mesh.vertices[:, 1:10], testvertices)
+
+test_degree = [2,3,2,4,3,4,2,3,2,3]
+@test allequal(QM.active_vertex_degrees(mesh), test_degree)
+
 testconn = [
     1  2  4  10 10
     4  5  7  8  6
@@ -100,6 +107,9 @@ mesh = QM.square_mesh(2)
 @test QM.number_of_quads(mesh) == 5
 @test QM.number_of_vertices(mesh) == 10
 @test all(mesh.active_quad[1:5])
+
+test_degree = [2,4,2,3,3,3,2,4,2,3]
+@test allequal(QM.active_vertex_degrees(mesh), test_degree)
 
 testvertices = [
     0.0 0.0 0.0 0.5 0.5 0.5 1.0 1.0 1.0 0.5

@@ -46,7 +46,7 @@ function collapse!(mesh, quad, edge, maxdegree = 7)
     v1, v2, v3, v4 = (vertex(mesh, quad, i) for i in (l1, l2, l3, l4))
 
     # move the collapsed vertex to the mean of v1 and v3
-    new_coords = collapsed_vertex_coordinates(mesh, v1, v2)
+    new_coords = collapsed_vertex_coordinates(mesh, v1, v3)
     set_coordinates!(mesh, v1, new_coords)
 
     # set degree of v1 

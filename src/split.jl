@@ -61,6 +61,16 @@ function split!(mesh, quad, edge, maxdegree = 7)
     set_twin!(mesh, opp_quad, l6, 4)
     set_twin!(mesh, q4, ol4, 2)
     set_twin!(mesh, q6, ol6, 3)
+    
+    # increment degree of vertices that gained an edge
+    increment_degree!(mesh, v4)
+    increment_degree!(mesh, v7)
+
+    # if the vertex being split is interior, then it loses one degree
+    if !vertex_on_boundary(mesh, v1)
+        decrement_degree!(mesh, v1)
+    end
+
 
     return true
 end
