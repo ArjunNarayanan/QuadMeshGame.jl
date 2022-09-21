@@ -404,3 +404,47 @@ function vertex_degrees(edges, num_vertices)
     end
     return degrees
 end
+
+function zero_pad(matrix, total_size)
+    numrows, numcols = size(matrix)
+    @assert numcols <= total_size
+    extra = total_size - numcols
+    return hcat(matrix, zeros(eltype(matrix), numrows, extra))
+end
+
+function reindex_quads!(mesh::QuadMesh)
+    quad_buffer_size = quad_buffer(mesh)
+    new_quad_indices = zeros(Int, quad_buffer_size)
+    num_quads = number_of_quads(mesh)
+    new_quad_indices[mesh.active_quad] .= 1:num_quads
+    
+    new_q2q = active_quad_q2q(mesh)
+    new_q2q = [q > 0 ? new_quad_indices[q] : 0 for q in new_q2q]
+    mesh.q2q = zero_pad(new_q2q, quad_buffer_size)
+
+    mesh.connectivity = zero_pad(active_quad_connectivity(mesh), quad_buffer_size)
+    mesh.e2e = zero_pad(active_quad_e2e(mesh), quad_buffer_size)
+
+    mesh.active_quad = falses(quad_buffer_size)
+    mesh.active_quad[1:num_quads] .= true
+end
+
+function reindex_vertices!(mesh::QuadMesh)
+    vertex_buffer_size = vertex_buffer(mesh)
+    new_vertex_indices = zeros(Int, vertex_buffer_size)
+    num_vertices = number_of_vertices(mesh)
+    active_vertices = mesh.active_vertex
+    new_vertex_indices[active_vertices] .= 1:num_vertices
+    
+    mesh.vertices = zero_pad(active_vertex_coordinates(mesh), vertex_buffer_size)
+
+    active_conn = active_quad_connectivity(mesh)
+    new_conn = [new_vertex_indices[v] for v in active_conn]
+    mesh.connectivity[:, mesh.active_quad] .= new_conn
+
+    num_extra_verts = vertex_buffer_size - num_vertices
+    mesh.degree = [mesh.degree[active_vertices]; zeros(Int, num_extra_verts)]
+    mesh.vertex_on_boundary = [mesh.vertex_on_boundary[active_vertices]; falses(num_extra_verts)]
+
+    mesh.active_vertex = [trues(num_vertices); falses(num_extra_verts)]
+end

@@ -139,3 +139,33 @@ test_q2q = [
     0 0 1 2 4
 ]
 @test allequal(test_q2q, mesh.q2q[:,1:5])
+
+
+mesh = QM.square_mesh(2, quad_buffer=10)
+@test QM.split!(mesh, 1, 3)
+@test QM.collapse!(mesh, 2, 4)
+QM.reindex_quads!(mesh)
+
+test_active_quad = falses(10)
+test_active_quad[1:4] .= true
+@test allequal(mesh.active_quad, test_active_quad)
+@test QM.number_of_quads(mesh) == 4
+
+test_conn = [1 4 5 3
+             4 7 8 4
+             3 8 9 5
+             2 5 6 6]
+test_conn = QM.zero_pad(test_conn, 10)
+@test allequal(test_conn, mesh.connectivity)
+test_q2q = [0 0 2 1
+            4 0 0 2
+            0 3 0 3
+            0 4 4 0]
+test_q2q = QM.zero_pad(test_q2q, 10)
+@test allequal(test_q2q, mesh.q2q)
+test_e2e = [0 0 3 2
+            1 0 0 4
+            0 1 0 4
+            0 2 3 0]
+test_e2e = QM.zero_pad(test_e2e, 10)
+@test allequal(mesh.e2e, test_e2e)
