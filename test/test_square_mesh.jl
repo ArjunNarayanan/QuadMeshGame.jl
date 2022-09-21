@@ -47,6 +47,22 @@ test_on_boundary = fill(true, 9)
 test_on_boundary[5] = false
 @test allequal(on_boundary, test_on_boundary)
 
+
+
+
+q = QM.make_connectivity(2)
+edges, bndix = QM.all_edges(q)
+test_edges = [1 1 2 2 3 4 4 5 5 6 7 8
+              2 4 3 5 6 5 7 6 8 9 8 9]
+@test allequal(test_edges, edges)
+test_bndix = [1,2,3,5,7,10,11,12]
+@test allequal(test_bndix, bndix)
+
+degrees = QM.vertex_degrees(edges, 9)
+test_degrees = [2,3,2,3,4,3,2,3,2]
+@test allequal(test_degrees, degrees)
+
+
 mesh = QM.square_mesh(2, quad_buffer = 10, vertex_buffer = 15, growth_factor = 2)
 
 @test allequal(mesh.vertices[:, 1:9], testvertices)
@@ -132,3 +148,22 @@ test_e2e = [
 ]
 @test allequal(mesh.e2e[:,1:5], test_e2e)
 @test QM.is_active_quad(mesh, 5)
+
+
+vertices = QM.make_vertices(3)
+conn = QM.make_connectivity(2)
+q2q = QM.make_q2q(2)
+e2e = QM.make_e2e(2)
+mesh = QM.QuadMesh(vertices, conn, q2q, e2e)
+
+test_degree = [2, 3, 2, 3, 4, 3, 2, 3, 2]
+@test allequal(QM.active_vertex_degrees(mesh), test_degree)
+test_on_boundary = fill(true, 9)
+test_on_boundary[5] = false
+@test allequal(mesh.vertex_on_boundary[mesh.active_vertex], test_on_boundary)
+
+conn = QM.make_connectivity(3)
+edges, bndix = QM.all_edges(conn)
+bnd_nodes = sort!(unique(vec(edges[:,bndix])))
+test_bnd_nodes = [1,2,3,4,5,8,9,12,13,14,15,16]
+@test allequal(bnd_nodes, test_bnd_nodes)

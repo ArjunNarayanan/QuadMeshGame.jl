@@ -75,6 +75,40 @@ mutable struct QuadMesh
     end
 end
 
+
+function QuadMesh(
+    vertices,
+    connectivity,
+    q2q,
+    e2e;
+    quad_buffer = 100,
+    vertex_buffer = 150,
+    growth_factor = 2,
+)
+    num_vertices = size(vertices, 2)
+
+    edges, bndix = all_edges(connectivity)
+    bnd_edges = edges[:, bndix]
+
+    bnd_nodes = sort!(unique(vec(bnd_edges)))
+    vertex_on_boundary = falses(num_vertices)
+    vertex_on_boundary[bnd_nodes] .= true
+
+    degrees = vertex_degrees(edges, num_vertices)
+
+    return QuadMesh(
+        vertices,
+        connectivity,
+        q2q,
+        e2e,
+        degrees,
+        vertex_on_boundary,
+        quad_buffer = quad_buffer,
+        vertex_buffer = vertex_buffer,
+        growth_factor = growth_factor,
+    )
+end
+
 function number_of_vertices(mesh::QuadMesh)
     return mesh.num_vertices
 end
@@ -160,7 +194,7 @@ function is_active_vertex(mesh::QuadMesh, vertex)
 end
 
 function has_neighbor(mesh::QuadMesh, quad, edge)
-    nbr_qidx = mesh.q2q[edge,quad]
+    nbr_qidx = mesh.q2q[edge, quad]
     if nbr_qidx == 0
         return false
     elseif !is_active_quad(mesh, nbr_qidx)
@@ -173,12 +207,12 @@ end
 
 function vertex(mesh::QuadMesh, quad, local_ver_idx)
     @assert is_active_quad(mesh, quad)
-    return mesh.connectivity[local_ver_idx,quad]
+    return mesh.connectivity[local_ver_idx, quad]
 end
 
 function vertex_coordinates(mesh::QuadMesh, vertex)
     @assert is_active_vertex(mesh, vertex)
-    return mesh.vertices[:,vertex]
+    return mesh.vertices[:, vertex]
 end
 
 function active_vertex_coordinates(mesh::QuadMesh)
@@ -235,7 +269,7 @@ end
 function set_vertex!(mesh::QuadMesh, quad, local_ver_idx, vertex)
     @assert is_active_vertex(mesh, vertex)
     @assert is_active_quad(mesh, quad)
-    mesh.connectivity[local_ver_idx,quad] = vertex
+    mesh.connectivity[local_ver_idx, quad] = vertex
 end
 
 function set_vertex_if_not_boundary!(mesh::QuadMesh, quad, local_ver_idx, vertex)
@@ -246,8 +280,8 @@ end
 
 function set_neighbor!(mesh::QuadMesh, quad, local_ver_idx, nbr_quad)
     @assert is_active_quad(mesh, quad)
-    @assert is_active_quad_or_boundary(mesh,nbr_quad)
-    mesh.q2q[local_ver_idx,quad] = nbr_quad
+    @assert is_active_quad_or_boundary(mesh, nbr_quad)
+    mesh.q2q[local_ver_idx, quad] = nbr_quad
 end
 
 function set_neighbor_if_not_boundary!(mesh::QuadMesh, quad, local_ver_idx, nbr_quad)
@@ -258,7 +292,7 @@ end
 
 function set_twin!(mesh::QuadMesh, quad, local_ver_idx, nbr_twin)
     @assert is_active_quad(mesh, quad)
-    mesh.e2e[local_ver_idx,quad] = nbr_twin
+    mesh.e2e[local_ver_idx, quad] = nbr_twin
 end
 
 function set_twin_if_not_boundary!(mesh::QuadMesh, quad, local_ver_idx, nbr_twin)
@@ -299,7 +333,7 @@ function insert_vertex!(mesh::QuadMesh, coords, deg, on_boundary)
     end
     @assert new_idx <= vertex_buffer(mesh)
 
-    mesh.vertices[:,new_idx] .= coords
+    mesh.vertices[:, new_idx] .= coords
     mesh.degree[new_idx] = deg
     mesh.active_vertex[new_idx] = true
     mesh.vertex_on_boundary[new_idx] = on_boundary
@@ -340,5 +374,33 @@ function delete_quad!(mesh::QuadMesh, idx)
 end
 
 function replace_index_in_vertex_connectivity!(mesh, old_vertex_idx, new_vertex_idx)
-    mesh.connectivity[mesh.connectivity .== old_vertex_idx] .= new_vertex_idx
+    mesh.connectivity[mesh.connectivity.==old_vertex_idx] .= new_vertex_idx
+end
+
+function all_edges(connectivity)
+    etag =
+        [connectivity[[1, 2], :] connectivity[[2, 3], :] connectivity[[3, 4], :] connectivity[
+            [4, 1],
+            :,
+        ]]
+    etag = sort(etag, dims = 1)
+    etag = sortslices(etag, dims = 2)
+
+    dup = vec(all(etag[:, 2:end] - etag[:, 1:end-1] .== 0, dims = 1))
+    keep = .![false; dup]
+    edges = etag[:, keep]
+
+    dup = [dup; false]
+    dup = dup[keep]
+    bndix = findall(.!dup)
+
+    return edges, bndix
+end
+
+function vertex_degrees(edges, num_vertices)
+    degrees = zeros(Int, num_vertices)
+    for i = 1:size(edges, 2)
+        degrees[edges[:, i]] .+= 1
+    end
+    return degrees
 end
