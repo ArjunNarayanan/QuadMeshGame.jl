@@ -1,4 +1,4 @@
-# using Revise
+using Revise
 using Test
 using QuadMeshGame
 include("useful_routines.jl")
@@ -169,3 +169,70 @@ test_e2e = [0 0 3 2
             0 2 3 0]
 test_e2e = QM.zero_pad(test_e2e, 10)
 @test allequal(mesh.e2e, test_e2e)
+
+mesh = QM.square_mesh(2, quad_buffer = 10, vertex_buffer = 20)
+@test QM.split!(mesh, 1, 3)
+@test QM.collapse!(mesh, 5, 1)
+@test QM.collapse!(mesh, 4, 3)
+QM.reindex_quads!(mesh)
+QM.reindex_vertices!(mesh)
+
+@test QM.number_of_quads(mesh) == 3
+@test QM.number_of_vertices(mesh) == 8
+
+active_verts = [trues(8); falses(12)]
+@test allequal(mesh.active_vertex, active_verts)
+active_quads = [trues(3); falses(7)]
+@test allequal(mesh.active_quad, active_quads)
+
+testvertices = [0.  0.  0.  0.5  0.5  1.  1.  1.
+                0.  0.5 1.  0.   1.   0.  0.5 1.]
+testvertices = QM.zero_pad(testvertices, 20)
+@test allequal(testvertices, mesh.vertices)
+
+conn = [1 2 4
+        4 8 6
+        8 5 7
+        2 3 8]
+conn = QM.zero_pad(conn, 10)
+@test allequal(mesh.connectivity, conn)
+
+
+
+# Split boundary vertex
+mesh = QM.square_mesh(2)
+@test QM.is_valid_split(mesh, 2, 1, 7)
+@test QM.split!(mesh, 2, 1)
+@test QM.number_of_quads(mesh) == 5
+@test QM.number_of_vertices(mesh) == 10
+@test all(mesh.active_quad[1:5])
+@test count(mesh.active_quad) == 5
+@test all(mesh.active_vertex[1:10])
+@test count(mesh.active_vertex) == 10
+
+testvertices = [
+    0.0 0.0 0.0 0.5 0.5 0.5 1.0 1.0 1.0 0.25
+    0.0 0.5 1.0 0.0 0.5 1.0 0.0 0.5 1.0 0.5
+]
+@test allequal(QM.active_vertex_coordinates(mesh), testvertices)
+
+testconn = [1 10 4 5 10
+            4 5 7 8 3
+            5 6 8 9 2
+            10 3 5 6 1]
+@test allequal(testconn, QM.active_quad_connectivity(mesh))
+
+test_q2q = [0 1 0 3 2
+            3 4 0 0 0
+            2 0 4 0 0
+            5 5 1 2 1]
+@test allequal(test_q2q, QM.active_quad_q2q(mesh))
+
+test_e2e = [0 3 0 3 4
+            4 4 0 0 0
+            1 0 1 0 0
+            4 1 2 2 4]
+@test allequal(test_e2e, QM.active_quad_e2e(mesh))
+
+test_degree = [3,2,3,3,4,3,2,3,2,3]
+@test allequal(QM.active_vertex_degrees(mesh), test_degree)

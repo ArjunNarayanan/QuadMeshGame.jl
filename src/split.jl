@@ -52,25 +52,22 @@ function split!(mesh, quad, edge, maxdegree = 7)
 
     new_quad_idx = insert_quad!(mesh, (v9, v4, v1, v7), (quad, q4, q6, opp_quad), (l4, ol4, ol6, l6))
 
-    set_neighbor!(mesh, quad, l4, new_quad_idx)
-    set_neighbor!(mesh, opp_quad, l6, new_quad_idx)
-    set_neighbor!(mesh, q4, ol4, new_quad_idx)
-    set_neighbor!(mesh, q6, ol6, new_quad_idx)
+    set_neighbor_if_not_boundary!(mesh, quad, l4, new_quad_idx)
+    set_neighbor_if_not_boundary!(mesh, opp_quad, l6, new_quad_idx)
+    set_neighbor_if_not_boundary!(mesh, q4, ol4, new_quad_idx)
+    set_neighbor_if_not_boundary!(mesh, q6, ol6, new_quad_idx)
 
-    set_twin!(mesh, quad, l4, 1)
-    set_twin!(mesh, opp_quad, l6, 4)
-    set_twin!(mesh, q4, ol4, 2)
-    set_twin!(mesh, q6, ol6, 3)
+    set_twin_if_not_boundary!(mesh, quad, l4, 1)
+    set_twin_if_not_boundary!(mesh, opp_quad, l6, 4)
+    set_twin_if_not_boundary!(mesh, q4, ol4, 2)
+    set_twin_if_not_boundary!(mesh, q6, ol6, 3)
     
     # increment degree of vertices that gained an edge
     increment_degree!(mesh, v4)
     increment_degree!(mesh, v7)
 
     # if the vertex being split is interior, then it loses one degree
-    if !vertex_on_boundary(mesh, v1)
-        decrement_degree!(mesh, v1)
-    end
-
+    decrement_degree!(mesh, v1)
 
     return true
 end

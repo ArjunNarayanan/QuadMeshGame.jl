@@ -355,9 +355,9 @@ function insert_quad!(mesh::QuadMesh, connectivity, q2q, e2e)
     @assert new_idx <= quad_buffer(mesh)
 
     @assert all((1 <= v <= number_of_vertices(mesh) for v in connectivity))
-    @assert all((1 <= q <= number_of_quads(mesh) for q in q2q))
-    @assert all((1 <= e <= 4 for e in e2e))
-    @assert all((is_active_quad(mesh, q) for q in q2q))
+    @assert all((0 <= q <= number_of_quads(mesh) for q in q2q))
+    @assert all((0 <= e <= 4 for e in e2e))
+    @assert all((q == 0 || is_active_quad(mesh, q) for q in q2q))
 
     mesh.connectivity[:, new_idx] .= connectivity
     mesh.q2q[:, new_idx] .= q2q
