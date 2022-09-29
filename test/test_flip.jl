@@ -160,10 +160,16 @@ test_e2e = [
 ]
 @test allequal(mesh.e2e[:, 1:4], test_e2e)
 
-@test !QM.is_valid_right_flip(mesh, 4, 4, maxdegree)
-@test !QM.is_valid_left_flip(mesh, 4, 4, maxdegree)
-@test !QM.is_valid_right_flip(mesh, 2, 3, maxdegree)
-@test !QM.is_valid_left_flip(mesh, 2, 3, maxdegree)
+@test QM.is_valid_right_flip(mesh, 4, 4, maxdegree)
+@test QM.is_valid_left_flip(mesh, 4, 4, maxdegree)
+@test QM.is_valid_right_flip(mesh, 2, 3, maxdegree)
+@test QM.is_valid_left_flip(mesh, 2, 3, maxdegree)
+
+@test QM.right_flip!(mesh, 4, 4)
+@test !QM.is_valid_right_flip(mesh, 3, 3, maxdegree)
+@test !QM.is_valid_left_flip(mesh, 3, 3, maxdegree)
+@test !QM.is_valid_right_flip(mesh, 1, 2, maxdegree)
+@test !QM.is_valid_left_flip(mesh, 1, 2, maxdegree)
 
 mesh = QM.square_mesh(2)
 @test QM.right_flip!(mesh, 3, 3)

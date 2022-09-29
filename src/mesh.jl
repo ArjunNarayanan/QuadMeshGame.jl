@@ -344,6 +344,7 @@ end
 function delete_vertex!(mesh::QuadMesh, idx)
     @assert is_active_vertex(mesh, idx)
     mesh.active_vertex[idx] = false
+    mesh.degree[idx] = 0
     mesh.num_vertices -= 1
 end
 
@@ -370,6 +371,9 @@ end
 function delete_quad!(mesh::QuadMesh, idx)
     @assert is_active_quad(mesh, idx)
     mesh.active_quad[idx] = false
+    mesh.connectivity[:, idx] .= 0
+    mesh.q2q[:, idx] .= 0
+    mesh.e2e[:, idx] .= 0
     mesh.num_quads -= 1
 end
 

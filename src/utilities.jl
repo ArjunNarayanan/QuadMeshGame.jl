@@ -15,3 +15,7 @@ function previous(i)
         return i - 1
     end
 end
+
+function find_point_index(point_set, point)
+    return argmin(vec(sum((point_set .- point).^2, dims=1)))
+end

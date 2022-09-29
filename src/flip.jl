@@ -34,7 +34,7 @@ function is_valid_right_flip(mesh::QuadMesh, quad, edge, maxdegree)
     l1, l2, l3, l4 = next_cyclic_vertices(edge)
     v1, v2, v3, v4 = (vertex(mesh, quad, i) for i in (l1, l2, l3, l4))
 
-    # Check that interior vertices losing an edge have a minimum degree of 4 before allowing flip
+    # Check that interior vertices losing an edge have a minimum degree of 3 before allowing flip
     if (!vertex_on_boundary(mesh, v1) && degree(mesh, v1) < 3)
         return false
     end
