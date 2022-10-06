@@ -2,6 +2,7 @@ mutable struct GameEnv
     mesh::Any
     d0::Any
     vertex_score::Any
+    template
     max_actions::Any
     num_actions::Any
     initial_score::Any
@@ -38,6 +39,7 @@ function GameEnv(mesh, d0, max_actions)
     nvb = vertex_buffer(mesh)
     exp_d0 = [d0; zeros(Int, nvb - length(d0))]
     vertex_score = mesh.degree - exp_d0
+    template = make_template(mesh)
     opt_score = sum(vertex_score)
     current_score = sum(abs.(vertex_score))
     initial_score = current_score
@@ -48,6 +50,7 @@ function GameEnv(mesh, d0, max_actions)
         mesh,
         exp_d0,
         vertex_score,
+        template,
         max_actions,
         num_actions,
         initial_score,
@@ -83,10 +86,11 @@ end
 
 function update_env_after_action(env)
     env.vertex_score = env.mesh.degree - env.d0
+    env.template = make_template(env.mesh)
     env.current_score = sum(abs.(env.vertex_score))
 end
 
-function step_left_flip!(env, quad, edge; maxdegree = 7, no_action_reward = -4)
+function step_left_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
     if is_valid_left_flip(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
         left_flip!(env.mesh, quad, edge, maxdegree)
@@ -99,10 +103,36 @@ function step_left_flip!(env, quad, edge; maxdegree = 7, no_action_reward = -4)
     env.is_terminated = check_terminated(env)
 end
 
-function step_right_flip!(env, quad, edge; maxdegree = 7, no_action_reward = -4)
+function step_right_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
     if is_valid_right_flip(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
         right_flip!(env.mesh, quad, edge, maxdegree)
+        update_env_after_action(env)
+        env.reward = old_score - env.current_score
+    else
+        env.reward = no_action_reward
+    end
+    env.num_actions += 1
+    env.is_terminated = check_terminated(env)
+end
+
+function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4)
+    if is_valid_split(env.mesh, quad, edge, maxdegree)
+        old_score = env.current_score
+        split!(env.mesh, quad, edge, maxdegree)
+        update_env_after_action(env)
+        env.reward = old_score - env.current_score
+    else
+        env.reward = no_action_reward
+    end
+    env.num_actions += 1
+    env.is_terminated = check_terminated(env)
+end
+
+function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
+    if is_valid_collapse(env.mesh, quad, edge, maxdegree)
+        old_score = env.current_score
+        collapse!(env.mesh, quad, edge, maxdegree)
         update_env_after_action(env)
         env.reward = old_score - env.current_score
     else
@@ -126,6 +156,8 @@ function make_edge_pairs(mesh)
     return pairs
 end
 
+
+
 function cycle_edges(x)
     nf, na = size(x)
     x = reshape(x, nf, 4, :)
@@ -137,7 +169,7 @@ function cycle_edges(x)
 
     x = cat(x1, x2, x3, x4, dims=2)
     x = reshape(x, 4nf, :)
-    
+
     return x
 end
 
@@ -151,13 +183,13 @@ function make_template(mesh)
 
     cx = cycle_edges(x)
 
-    pcx = zero_pad(cx)[:,pairs][3:end,:]
+    pcx = zero_pad(cx)[:, pairs][3:end, :]
     cpcx = cycle_edges(pcx)
-    
-    pcpcx = zero_pad(cpcx)[:,pairs][3:end,:]
+
+    pcpcx = zero_pad(cpcx)[:, pairs][3:end, :]
     cpcpcx = cycle_edges(pcpcx)
 
     template = vcat(cx, cpcx, cpcpcx)
-    
+
     return template
 end

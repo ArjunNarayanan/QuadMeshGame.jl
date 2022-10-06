@@ -71,16 +71,29 @@ test_cx = cat(test_cx1, test_cx2, test_cx3, test_cx4, dims=2)
 mesh = QM.square_mesh(3, vertex_buffer=16, quad_buffer=9)
 template = QM.make_template(mesh)
 
+test_elem_5_1 = [6,10,11,7,5,9,14,15,12,8,3,2,2,1,0,0,13,14,9,13,0,0,16,12,15,16,0,0,4,3,8,4,0,0,1,5]
+test_elem_5_2 = [10,11,7,6,14,15,12,8,3,2,5,9,9,13,0,0,16,12,15,16,0,0,4,3,8,4,0,0,1,5,2,1,0,0,13,14]
+test_elem_5_3 = [11,7,6,10,12,8,3,2,5,9,14,15,15,16,0,0,4,3,8,4,0,0,1,5,2,1,0,0,13,14,9,13,0,0,16,12]
+test_elem_5_4 = [7,6,10,11,3,2,5,9,14,15,12,8,8,4,0,0,1,5,2,1,0,0,13,14,9,13,0,0,16,12,15,16,0,0,4,3]
 
-# p = QM.make_edge_pairs(mesh)
-# x = reshape(mesh.connectivity, 1, :)
+@test allequal(template[:,17], test_elem_5_1)
+@test allequal(template[:,18], test_elem_5_2)
+@test allequal(template[:,19], test_elem_5_3)
+@test allequal(template[:,20], test_elem_5_4)
 
-# cx = QM.cycle_edges(x)
 
-# cp = QM.zero_pad(cx)[:,p][3:end,:]
+mesh = QM.square_mesh(2)
+env = QM.GameEnv(mesh, mesh.degree, 10)
+QM.step_split!(env, 1, 3)
 
-# ccp = QM.cycle_edges(cp)
+template_5_1 = [10,4,5,6,2,1,7,8,8,9,3,2,6,3,0,0,0,0,0,0,0,0,9,6,4,7,0,0,0,0,0,0,0,0,1,4]
+template_5_2 = [4,5,6,10,7,8,8,9,3,2,2,1,0,0,0,0,9,6,4,7,0,0,0,0,0,0,0,0,1,4,6,3,0,0,0,0]
+@test allequal(env.template[:,17], template_5_1)
+@test allequal(env.template[:,18], template_5_2)
 
-# ccpp = QM.zero_pad(ccp)[:,p][3:end,:]
+template_3_2 = [7,8,5,4,0,0,9,6,6,10,0,0,0,0,0,0,0,0,0,0,0,0,10,4,8,9,3,2,2,1,0,0,0,0,0,0]
+@test allequal(env.template[:,10], template_3_2)
 
-# state = vcat(cx,ccp,ccpp)
+QM.step_collapse!(env, 2, 2)
+template_5_1 = [10,4,5,6,2,1,7,8,8,9,0,0,0,0,0,0,0,0,0,0,0,0,9,6,4,7,0,0,0,0,0,0,0,0,0,0]
+@test allequal(template_5_1, env.template[:,17])

@@ -40,4 +40,4 @@ mesh = QuadMeshGame.QuadMesh(mesh.p, mesh.t, mesh.t2t, mesh.t2n)
 @assert count(.!mesh.vertex_on_boundary[mesh.active_vertex]) == 12
 
 template = QM.make_template(mesh)
-center = template[:,85:88]
+center = template[13:end,85:88]
