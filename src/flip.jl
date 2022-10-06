@@ -133,7 +133,7 @@ function left_flip!(mesh::QuadMesh, quad, edge, maxdegree = 7)
     return true
 end
 
-function right_flip!(mesh::QuadMesh, quad, edge; maxdegree = 7)
+function right_flip!(mesh::QuadMesh, quad, edge, maxdegree = 7)
     if !is_valid_right_flip(mesh, quad, edge, maxdegree)
         return false
     end

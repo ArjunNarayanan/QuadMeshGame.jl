@@ -15,3 +15,7 @@ end
 @testset "test collapse" begin
     include("test_collapse.jl")
 end
+
+@testset "test Game Env" begin
+    include("test_game_env.jl")
+end
