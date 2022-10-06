@@ -185,6 +185,11 @@ function is_active_quad(mesh::QuadMesh, quad)
     return mesh.active_quad[quad]
 end
 
+function is_interior_quad(mesh, quad)
+    @assert is_active_quad(mesh, quad)
+    all((has_neighbor(mesh, quad, l) for l in 1:4))
+end
+
 function is_active_quad_or_boundary(mesh::QuadMesh, quad)
     return quad == 0 || is_active_quad(mesh, quad)
 end

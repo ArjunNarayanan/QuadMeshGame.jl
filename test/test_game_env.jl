@@ -23,7 +23,7 @@ env = QM.GameEnv(mesh, d0, 10)
 
 @test env.num_actions == 0
 @test env.max_actions == 10
-@test allequal(d0, env.d0)
+@test allequal(d0, env.desired_degree)
 
 test_vs = [0,1,0,-1,-1,0,1,0,0]
 @test allequal(QM.active_vertex_scores(env), test_vs)
@@ -86,6 +86,8 @@ mesh = QM.square_mesh(2)
 env = QM.GameEnv(mesh, mesh.degree, 10)
 QM.step_split!(env, 1, 3)
 
+@test env.desired_degree[10] == 4
+
 template_5_1 = [10,4,5,6,2,1,7,8,8,9,3,2,6,3,0,0,0,0,0,0,0,0,9,6,4,7,0,0,0,0,0,0,0,0,1,4]
 template_5_2 = [4,5,6,10,7,8,8,9,3,2,2,1,0,0,0,0,9,6,4,7,0,0,0,0,0,0,0,0,1,4,6,3,0,0,0,0]
 @test allequal(env.template[:,17], template_5_1)
@@ -94,6 +96,22 @@ template_5_2 = [4,5,6,10,7,8,8,9,3,2,2,1,0,0,0,0,9,6,4,7,0,0,0,0,0,0,0,0,1,4,6,3
 template_3_2 = [7,8,5,4,0,0,9,6,6,10,0,0,0,0,0,0,0,0,0,0,0,0,10,4,8,9,3,2,2,1,0,0,0,0,0,0]
 @test allequal(env.template[:,10], template_3_2)
 
-QM.step_collapse!(env, 2, 2)
-template_5_1 = [10,4,5,6,2,1,7,8,8,9,0,0,0,0,0,0,0,0,0,0,0,0,9,6,4,7,0,0,0,0,0,0,0,0,0,0]
+QM.step_left_flip!(env, 1, 2)
+QM.step_left_flip!(env, 1, 2)
+QM.step_left_flip!(env, 1, 2)
+
+test_conn = [6 10 4 5
+             2 10 6 3
+             4 7 8 5
+             5 8 9 6
+             4 10 2 1]
+@test allequal(QM.active_quad_connectivity(env.mesh), test_conn')
+
+@test QM.is_valid_collapse(mesh, 1, 2, 7)
+QM.step_collapse!(env, 1, 2)
+
+template_5_1 = [4,10,2,1,7,8,6,3,0,0,0,0,0,0,0,0,9,6,8,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 @test allequal(template_5_1, env.template[:,17])
+
+test_desired_degree = [[2,3,2,3,0,3,2,3,2,4]; zeros(Int, QM.vertex_buffer(env.mesh) - 10)]
+@test allequal(test_desired_degree, env.desired_degree)

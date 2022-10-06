@@ -24,6 +24,10 @@ mesh = QM.square_mesh(2)
 @test QM.is_valid_collapse(mesh, 5, 3, 7)
 @test !QM.is_valid_collapse(mesh, 5, 4, 7)
 
+
+########################################################################################
+# DISABLED COLLAPSE FOR QUADS ON BOUNDARY
+
 mesh = QM.square_mesh(2)
 @test QM.collapse!(mesh, 1, 1)
 @test QM.number_of_quads(mesh) == 3
@@ -75,6 +79,7 @@ active_vertex_degrees = QM.active_vertex_degrees(mesh)
 test_on_boundary = trues(8)
 @test allequal(mesh.vertex_on_boundary[mesh.active_vertex], test_on_boundary)
 
+########################################################################################
 
 mesh = QM.square_mesh(2)
 @test QM.split!(mesh, 1, 3)

@@ -1,6 +1,6 @@
 mutable struct GameEnv
     mesh::Any
-    d0::Any
+    desired_degree::Any
     vertex_score::Any
     template
     max_actions::Any
@@ -85,7 +85,7 @@ function active_vertex_scores(env)
 end
 
 function update_env_after_action(env)
-    env.vertex_score = env.mesh.degree - env.d0
+    env.vertex_score = env.mesh.degree - env.desired_degree
     env.template = make_template(env.mesh)
     env.current_score = sum(abs.(env.vertex_score))
 end
@@ -116,10 +116,16 @@ function step_right_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
     env.is_terminated = check_terminated(env)
 end
 
-function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4)
+function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vertex_desired_degree = 4)
     if is_valid_split(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
+
+        new_vertex_idx = number_of_vertices(env.mesh) + 1
+
         split!(env.mesh, quad, edge, maxdegree)
+        # set the desired degree of the new vertex
+        env.desired_degree[new_vertex_idx] = new_vertex_desired_degree
+        
         update_env_after_action(env)
         env.reward = old_score - env.current_score
     else
@@ -130,9 +136,16 @@ function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4)
 end
 
 function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
-    if is_valid_collapse(env.mesh, quad, edge, maxdegree)
+    if is_interior_quad(env.mesh, quad) && is_valid_collapse(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
+        
+        collapsed_vertex = env.mesh.connectivity[next(next(edge)), quad]
+        
         collapse!(env.mesh, quad, edge, maxdegree)
+        
+        # set the desired degree of collapsed vertex to zero
+        env.desired_degree[collapsed_vertex] = 0
+
         update_env_after_action(env)
         env.reward = old_score - env.current_score
     else
