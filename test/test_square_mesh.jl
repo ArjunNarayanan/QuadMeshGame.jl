@@ -167,3 +167,8 @@ edges, bndix = QM.all_edges(conn)
 bnd_nodes = sort!(unique(vec(edges[:,bndix])))
 test_bnd_nodes = [1,2,3,4,5,8,9,12,13,14,15,16]
 @test allequal(bnd_nodes, test_bnd_nodes)
+
+
+mesh = QM.square_mesh(2)
+v1 = mesh.vertices
+QM.averagesmoothing!(mesh)

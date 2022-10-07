@@ -232,3 +232,7 @@ end
 function active_vertex_desired_degree(env)
     return env.desired_degree[env.mesh.active_vertex]
 end
+
+function active_vertex_score(env)
+    return env.vertex_score[env.mesh.active_vertex]
+end

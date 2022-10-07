@@ -460,3 +460,34 @@ function reindex_vertices!(mesh::QuadMesh)
 
     return new_vertex_indices
 end
+
+function averagesmoothing(points, connectivity, q2q, active_quads, boundary_nodes)
+    num_points = size(points, 2)
+    new_points = similar(points)
+    fill!(new_points, 0.0)
+    count = zeros(Int, num_points)
+
+    for (quad, is_active) in enumerate(active_quads)
+        if is_active
+            for edge in 1:4
+                if quad > q2q[edge, quad]
+                    v1 = connectivity[edge, quad]
+                    v2 = connectivity[next(edge), quad]
+                    new_points[:,v1] += points[:, v2]
+                    new_points[:, v2] += points[:, v1]
+                    count[v1] += 1
+                    count[v2] += 1
+                end
+            end
+        end
+    end
+    count[count .== 0] .= 1
+    new_points = new_points ./ count'
+    new_points[:, boundary_nodes] = points[:, boundary_nodes]
+    return new_points
+end
+
+function averagesmoothing!(mesh::QuadMesh)
+    boundary_nodes = findall(mesh.vertex_on_boundary)
+    mesh.vertices = averagesmoothing(mesh.vertices, mesh.connectivity, mesh.q2q, mesh.active_quad, boundary_nodes)
+end
