@@ -125,7 +125,7 @@ function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vert
         split!(env.mesh, quad, edge, maxdegree)
         # set the desired degree of the new vertex
         env.desired_degree[new_vertex_idx] = new_vertex_desired_degree
-        
+
         update_env_after_action(env)
         env.reward = old_score - env.current_score
     else
@@ -155,6 +155,12 @@ function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
     env.is_terminated = check_terminated(env)
 end
 
+function step_nothing!(env; reward = 0)
+    env.num_actions += 1
+    env.reward = reward
+    env.is_terminated = check_terminated(env)
+end
+
 function make_edge_pairs(mesh)
     total_nq = quad_buffer(mesh)
     pairs = zeros(Int, 4total_nq)
@@ -168,8 +174,6 @@ function make_edge_pairs(mesh)
     end
     return pairs
 end
-
-
 
 function cycle_edges(x)
     nf, na = size(x)
@@ -205,4 +209,26 @@ function make_template(mesh)
     template = vcat(cx, cpcx, cpcpcx)
 
     return template
+end
+
+function reindexed_desired_degree(old_desired_degree, new_vertex_indices, buffer_size)
+    new_desired_degree = zeros(Int, buffer_size)
+    for (old_idx, desired_degree) in enumerate(old_desired_degree)
+        new_idx = new_vertex_indices[old_idx]
+        if new_idx > 0
+            new_desired_degree[new_idx] = desired_degree
+        end
+    end
+    return new_desired_degree
+end
+
+function reindex_game_env!(env)
+    reindex_quads!(env.mesh)
+    new_vertex_indices = reindex_vertices!(env.mesh)
+    vertex_buffer_size = vertex_buffer(env.mesh)
+    env.desired_degree = reindexed_desired_degree(env.desired_degree, new_vertex_indices, vertex_buffer_size)
+end
+
+function active_vertex_desired_degree(env)
+    return env.desired_degree[env.mesh.active_vertex]
 end

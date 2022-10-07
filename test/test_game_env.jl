@@ -115,3 +115,57 @@ template_5_1 = [4,10,2,1,7,8,6,3,0,0,0,0,0,0,0,0,9,6,8,9,0,0,0,0,0,0,0,0,0,0,0,0
 
 test_desired_degree = [[2,3,2,3,0,3,2,3,2,4]; zeros(Int, QM.vertex_buffer(env.mesh) - 10)]
 @test allequal(test_desired_degree, env.desired_degree)
+
+
+
+mesh = QM.square_mesh(2)
+d0 = deepcopy(mesh.degree)
+d0[1] = 5
+env = QM.GameEnv(mesh, d0, 4)
+QM.step_nothing!(env)
+@test !env.is_terminated
+@test env.reward == 0
+
+QM.step_nothing!(env)
+@test !env.is_terminated
+@test env.reward == 0
+
+QM.step_nothing!(env)
+@test !env.is_terminated
+@test env.reward == 0
+
+QM.step_nothing!(env)
+@test env.is_terminated
+@test env.reward == 0
+
+
+############################################################################################################
+# Test reindex game env
+mesh = QM.square_mesh(2)
+env = QM.GameEnv(mesh, mesh.degree, 10)
+QM.step_split!(env, 1, 3)
+QM.step_left_flip!(env, 1, 2)
+QM.step_left_flip!(env, 1, 2)
+QM.step_left_flip!(env, 1, 2)
+QM.step_collapse!(env, 1, 2)
+
+QM.reindex_game_env!(env)
+
+connectivity = [2 9 5 3
+                4 6 7 9
+                9 7 8 5
+                4 9 2 1]
+@test allequal(QM.active_quad_connectivity(env.mesh), connectivity')
+q2q = [4 3 0 0
+       0 0 3 4
+       2 0 0 1
+       2 1 0 0]
+@test allequal(QM.active_quad_q2q(env.mesh), q2q')
+e2e = [2 4 0 0
+       0 0 1 1
+       3 0 0 2
+       4 1 0 0]
+@test allequal(QM.active_quad_e2e(env.mesh), e2e')
+d0 = [2,3,2,3,3,2,3,2,4]
+@test allequal(QM.active_vertex_desired_degree(env), d0)
+############################################################################################################
