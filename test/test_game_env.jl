@@ -169,3 +169,19 @@ e2e = [2 4 0 0
 d0 = [2,3,2,3,3,2,3,2,4]
 @test allequal(QM.active_vertex_desired_degree(env), d0)
 ############################################################################################################
+
+
+############################################################################################################
+# TEST COLLAPSING BOUNDARY QUAD
+mesh = QM.square_mesh(2)
+desired_degree = deepcopy(mesh.degree)
+env = QM.GameEnv(mesh, desired_degree, 5)
+QM.step_collapse!(env, 1, 3)
+degree = [2,2,2,4,3,2,3,2]
+@test allequal(QM.active_vertex_degrees(env.mesh), degree)
+test_d0 = [0,3,2,3,2,3,2,3,2]
+@test allequal(env.desired_degree[1:9], test_d0)
+on_boundary = trues(8)
+@test allequal(env.mesh.vertex_on_boundary[env.mesh.active_vertex], on_boundary)
+QM.is_valid_collapse(mesh, 4, 1, 7)
+############################################################################################################

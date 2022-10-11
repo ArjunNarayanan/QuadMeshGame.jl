@@ -136,13 +136,19 @@ function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vert
 end
 
 function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
-    if is_interior_quad(env.mesh, quad) && is_valid_collapse(env.mesh, quad, edge, maxdegree)
+    if is_valid_collapse(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
         
+        current_vertex = env.mesh.connectivity[edge, quad]
         collapsed_vertex = env.mesh.connectivity[next(next(edge)), quad]
+        opp_ver_on_boundary = vertex_on_boundary(env.mesh, collapsed_vertex)
         
         collapse!(env.mesh, quad, edge, maxdegree)
         
+        # if collapsed vertex on boundary, set that as the desired degree of current vertex
+        if opp_ver_on_boundary
+            env.desired_degree[current_vertex] = env.desired_degree[collapsed_vertex]
+        end
         # set the desired degree of collapsed vertex to zero
         env.desired_degree[collapsed_vertex] = 0
 
