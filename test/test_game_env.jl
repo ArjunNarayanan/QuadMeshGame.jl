@@ -183,5 +183,6 @@ test_d0 = [0,3,2,3,2,3,2,3,2]
 @test allequal(env.desired_degree[1:9], test_d0)
 on_boundary = trues(8)
 @test allequal(env.mesh.vertex_on_boundary[env.mesh.active_vertex], on_boundary)
-QM.is_valid_collapse(mesh, 4, 1, 7)
+# need at least one vertex in interior for collapse
+@test !QM.is_valid_collapse(mesh, 4, 1, 7)
 ############################################################################################################

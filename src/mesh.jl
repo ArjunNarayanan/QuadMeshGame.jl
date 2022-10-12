@@ -9,6 +9,8 @@ mutable struct QuadMesh
     active_quad::Any
     num_vertices::Any
     num_quads::Any
+    new_vertex_pointer
+    new_quad_pointer
     growth_factor::Any
     function QuadMesh(
         vertices,
@@ -59,6 +61,9 @@ mutable struct QuadMesh
         active_quad = falses(quad_buffer)
         active_quad[1:num_quads] .= true
 
+        new_vertex_pointer = num_vertices + 1
+        new_quad_pointer = num_quads + 1
+
         new(
             _vertices,
             _connectivity,
@@ -70,6 +75,8 @@ mutable struct QuadMesh
             active_quad,
             num_vertices,
             num_quads,
+            new_vertex_pointer,
+            new_quad_pointer,
             growth_factor,
         )
     end
@@ -332,7 +339,8 @@ function set_on_boundary!(mesh, vertex, on_boundary)
 end
 
 function insert_vertex!(mesh::QuadMesh, coords, deg, on_boundary)
-    new_idx = number_of_vertices(mesh) + 1
+    new_idx = mesh.new_vertex_pointer
+
     if new_idx > vertex_buffer(mesh)
         expand_vertices!(mesh)
     end
@@ -343,6 +351,8 @@ function insert_vertex!(mesh::QuadMesh, coords, deg, on_boundary)
     mesh.active_vertex[new_idx] = true
     mesh.vertex_on_boundary[new_idx] = on_boundary
     mesh.num_vertices += 1
+    mesh.new_vertex_pointer += 1
+
     return new_idx
 end
 
@@ -354,22 +364,24 @@ function delete_vertex!(mesh::QuadMesh, idx)
 end
 
 function insert_quad!(mesh::QuadMesh, connectivity, q2q, e2e)
-    new_idx = number_of_quads(mesh) + 1
+    new_idx = mesh.new_quad_pointer
+
     if new_idx > quad_buffer(mesh)
         expand_quad!(mesh)
     end
     @assert new_idx <= quad_buffer(mesh)
 
-    @assert all((1 <= v <= number_of_vertices(mesh) for v in connectivity))
-    @assert all((0 <= q <= number_of_quads(mesh) for q in q2q))
-    @assert all((0 <= e <= 4 for e in e2e))
+    @assert all((is_active_vertex(mesh, v) for v in connectivity))
     @assert all((q == 0 || is_active_quad(mesh, q) for q in q2q))
+    @assert all((0 <= e <= 4 for e in e2e))
 
     mesh.connectivity[:, new_idx] .= connectivity
     mesh.q2q[:, new_idx] .= q2q
     mesh.e2e[:, new_idx] .= e2e
     mesh.active_quad[new_idx] = true
     mesh.num_quads += 1
+    mesh.new_quad_pointer += 1
+
     return new_idx
 end
 
