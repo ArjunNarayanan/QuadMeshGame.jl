@@ -17,13 +17,13 @@ QM = QuadMeshGame
 @test all(QM.desired_degree.(309:360) .== 5)
 
 mesh = QM.square_mesh(2)
-d0 = copy(mesh.degree)
+d0 = copy(mesh.degree[mesh.active_vertex])
 @test QM.left_flip!(mesh, 1, 2)
 env = QM.GameEnv(mesh, d0, 10)
 
 @test env.num_actions == 0
 @test env.max_actions == 10
-@test allequal(d0, env.desired_degree)
+@test allequal(d0, env.desired_degree[mesh.active_vertex])
 
 test_vs = [0,1,0,-1,-1,0,1,0,0]
 @test allequal(QM.active_vertex_scores(env), test_vs)
@@ -83,7 +83,7 @@ test_elem_5_4 = [7,6,10,11,3,2,5,9,14,15,12,8,8,4,0,0,1,5,2,1,0,0,13,14,9,13,0,0
 
 
 mesh = QM.square_mesh(2)
-env = QM.GameEnv(mesh, mesh.degree, 10)
+env = QM.GameEnv(mesh, mesh.degree[mesh.active_vertex], 10)
 QM.step_split!(env, 1, 3)
 
 @test env.desired_degree[10] == 4
@@ -119,12 +119,13 @@ test_desired_degree = [[2,3,2,3,0,3,2,3,2,4]; zeros(Int, QM.vertex_buffer(env.me
 
 
 mesh = QM.square_mesh(2)
-d0 = deepcopy(mesh.degree)
-d0[1] = 5
+d0 = deepcopy(mesh.degree[mesh.active_vertex])
+QM.left_flip!(mesh, 1, 2)
 env = QM.GameEnv(mesh, d0, 4)
 QM.step_nothing!(env)
 @test !env.is_terminated
 @test env.reward == 0
+@test env.num_actions == 1
 
 QM.step_nothing!(env)
 @test !env.is_terminated
@@ -142,7 +143,7 @@ QM.step_nothing!(env)
 ############################################################################################################
 # Test reindex game env
 mesh = QM.square_mesh(2)
-env = QM.GameEnv(mesh, mesh.degree, 10)
+env = QM.GameEnv(mesh, mesh.degree[mesh.active_vertex], 10)
 QM.step_split!(env, 1, 3)
 QM.step_left_flip!(env, 1, 2)
 QM.step_left_flip!(env, 1, 2)
@@ -174,7 +175,7 @@ d0 = [2,3,2,3,3,2,3,2,4]
 ############################################################################################################
 # TEST COLLAPSING BOUNDARY QUAD
 mesh = QM.square_mesh(2)
-desired_degree = deepcopy(mesh.degree)
+desired_degree = deepcopy(mesh.degree[mesh.active_vertex])
 env = QM.GameEnv(mesh, desired_degree, 5)
 QM.step_collapse!(env, 1, 3)
 degree = [2,2,2,4,3,2,3,2]
