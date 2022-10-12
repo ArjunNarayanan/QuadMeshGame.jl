@@ -36,11 +36,14 @@ end
 
 function GameEnv(mesh, d0, max_actions)
     _is_initial_mesh(mesh)
+    @assert length(d0) == number_of_vertices(mesh)
+    @assert max_actions > 0
+
     nvb = vertex_buffer(mesh)
     exp_d0 = [d0; zeros(Int, nvb - length(d0))]
     vertex_score = mesh.degree - exp_d0
     template = make_template(mesh)
-    opt_score = sum(vertex_score)
+    opt_score = abs(sum(vertex_score))
     current_score = sum(abs.(vertex_score))
     initial_score = current_score
     reward = 0
