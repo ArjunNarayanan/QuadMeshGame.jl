@@ -122,3 +122,23 @@ test_e2e = [0 3 0 3
 
 test_degree = [2,3,2,3,3,2,3,2,4]
 @test allequal(test_degree, QM.active_vertex_degrees(mesh))
+
+
+vertices = rand(2,8)
+connectivity = [1  2  8  8
+                2  3  3  5
+                7  8  4  6
+                8  7  5  1]
+q2q = [0  0  2  3
+       2  3  0  0
+       2  1  0  0
+       4  1  4  1]
+e2e = transpose([0 4 3 4
+       0 1 3 2
+       2 0 0 1
+       4 0 0 4])
+degree = [3 3 3 2 3 2 2 4]
+mesh = QM.QuadMesh(vertices, connectivity, q2q, e2e)
+
+QM.is_valid_collapse(mesh, 1, 4, 7)
+QM.collapse!(mesh, 1, 4)

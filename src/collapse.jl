@@ -24,6 +24,12 @@ function is_valid_collapse(mesh, quad, edge, maxdegree)
         return false
     end
 
+    # check that merging faces belong to different quads
+    q1, q2, q3, q4 = (neighbor(mesh, quad, l) for l in (l1, l2, l3, l4))
+    if (q1 == q2) || (q3 == q4)
+        return false
+    end
+
     return true
 end
 
