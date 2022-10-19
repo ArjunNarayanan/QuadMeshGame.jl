@@ -140,5 +140,5 @@ e2e = transpose([0 4 3 4
 degree = [3 3 3 2 3 2 2 4]
 mesh = QM.QuadMesh(vertices, connectivity, q2q, e2e)
 
-QM.is_valid_collapse(mesh, 1, 4, 7)
+@test !QM.is_valid_collapse(mesh, 1, 4, 7)
 QM.collapse!(mesh, 1, 4)

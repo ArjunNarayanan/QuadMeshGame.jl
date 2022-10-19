@@ -187,3 +187,11 @@ on_boundary = trues(8)
 # need at least one vertex in interior for collapse
 @test !QM.is_valid_collapse(mesh, 4, 1, 7)
 ############################################################################################################
+
+
+mesh = QM.square_mesh(3, vertex_buffer=16, quad_buffer=9)
+pairs = QM.make_edge_pairs(mesh)
+
+x = reshape(mesh.connectivity, 1, :)
+cx = QM.cycle_edges(x)
+pcx = QM.zero_pad(cx)[:, pairs][3:end, :]
