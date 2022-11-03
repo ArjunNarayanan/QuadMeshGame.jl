@@ -193,5 +193,14 @@ mesh = QM.square_mesh(3, vertex_buffer=16, quad_buffer=9)
 pairs = QM.make_edge_pairs(mesh)
 
 x = reshape(mesh.connectivity, 1, :)
+
 cx = QM.cycle_edges(x)
-pcx = QM.zero_pad(cx)[:, pairs][3:end, :]
+
+p1x = QM.zero_pad(cx)[:, pairs][3:end, :]
+cp1x = QM.cycle_edges(p1x)
+
+p2x = QM.zero_pad(cp1x)[:, pairs][3:end, :]
+cp2x = QM.cycle_edges(p2x)
+
+p3x = QM.zero_pad(cp2x)[:, pairs][7:end, :]
+cp3x = QM.cycle_edges(p3x)

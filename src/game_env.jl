@@ -203,7 +203,7 @@ function zero_pad(m)
     return [m zeros(Int, size(m, 1))]
 end
 
-function make_template(mesh)
+function old_make_template(mesh)
     pairs = make_edge_pairs(mesh)
     x = reshape(mesh.connectivity, 1, :)
 
@@ -216,6 +216,26 @@ function make_template(mesh)
     cpcpcx = cycle_edges(pcpcx)
 
     template = vcat(cx, cpcx, cpcpcx)
+
+    return template
+end
+
+function make_template(mesh)
+    pairs = make_edge_pairs(mesh)
+    x = reshape(mesh.connectivity, 1, :)
+
+    cx = cycle_edges(x)
+
+    pcx = zero_pad(cx)[:, pairs][3:end, :]
+    cpcx = cycle_edges(pcx)
+
+    pcpcx = zero_pad(cpcx)[:, pairs][3:end, :]
+    cpcpcx = cycle_edges(pcpcx)
+
+    pcpcpcx = zero_pad(cpcpcx)[:, pairs][7:end, :]
+    cpcpcpcx = cycle_edges(pcpcpcx)
+
+    template = vcat(cx, cpcx, cpcpcx, cpcpcpcx)
 
     return template
 end
@@ -236,6 +256,8 @@ function reindex_game_env!(env)
     new_vertex_indices = reindex_vertices!(env.mesh)
     vertex_buffer_size = vertex_buffer(env.mesh)
     env.desired_degree = reindexed_desired_degree(env.desired_degree, new_vertex_indices, vertex_buffer_size)
+    env.vertex_score = env.mesh.degree - env.desired_degree
+    env.template = make_template(env.mesh)
 end
 
 function active_vertex_desired_degree(env)
