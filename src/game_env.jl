@@ -203,7 +203,7 @@ function zero_pad(m)
     return [m zeros(Int, size(m, 1))]
 end
 
-function old_make_template(mesh)
+function make_template(mesh)
     pairs = make_edge_pairs(mesh)
     x = reshape(mesh.connectivity, 1, :)
 
@@ -220,7 +220,7 @@ function old_make_template(mesh)
     return template
 end
 
-function make_template(mesh)
+function new_make_template(mesh)
     pairs = make_edge_pairs(mesh)
     x = reshape(mesh.connectivity, 1, :)
 
