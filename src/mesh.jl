@@ -1,3 +1,38 @@
+function make_quad_connectivity(connectivity)
+    map = [1 2 3 4;
+           2 3 4 1]
+    ne,nt = size(map,2), size(connectivity,2)
+    
+    nr = size(connectivity, 1)
+    @assert nr == 4 "Expected connectivity to have 4 rows, got $nr instead"
+
+    t2t = zeros(Int, ne, nt)
+    t2n = zeros(Int, ne, nt)
+    dd = Dict{Tuple{Int,Int}, Tuple{Int,Int}}()
+    sizehint!(dd, nt*ne)
+
+    for it = 1:nt
+        for ie = 1:ne
+            e1 = connectivity[map[1,ie],it]
+            e2 = connectivity[map[2,ie],it]
+            e = ( min(e1,e2), max(e1,e2) )
+            if haskey(dd,e)
+                nb = pop!(dd,e)
+                t2t[ie,it] = nb[1]
+                t2n[ie,it] = nb[2]
+                t2t[nb[2],nb[1]] = it
+                t2n[nb[2],nb[1]] = ie
+            else
+                dd[e] = (it,ie)
+            end
+        end
+    end
+    t2t,t2n
+end
+
+
+
+
 mutable struct QuadMesh
     vertices::Any
     connectivity::Any
@@ -114,6 +149,18 @@ function QuadMesh(
         vertex_buffer = vertex_buffer,
         growth_factor = growth_factor,
     )
+end
+
+function QuadMesh(vertices, connectivity)
+    @assert ndims(vertices) == 2
+    @assert ndims(connectivity) == 2
+    dim, nverts = size(vertices)
+    nv, nquads = size(connectivity)
+    @assert dim == 2
+    @assert nv == 4
+
+    q2q, e2e = make_quad_connectivity(connectivity)
+    return QuadMesh(vertices, connectivity, q2q, e2e, quad_buffer = 2*nquads, vertex_buffer = 2*nverts)
 end
 
 function number_of_vertices(mesh::QuadMesh)
