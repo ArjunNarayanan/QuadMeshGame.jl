@@ -2,6 +2,8 @@
 
 [![Build Status](https://github.com/ArjunNarayanan/QuadMeshGame.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/ArjunNarayanan/QuadMeshGame.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
+This package is heavily influenced by the ideas of [Per-Olof Persson](http://persson.berkeley.edu/).
+
 This package implements connectivity editing operations on Quad Meshes. A Quad Mesh is a 2D mesh where all the elements are quadrilaterals. You can use the [PlotQuadMesh.jl](https://github.com/ArjunNarayanan/PlotQuadMesh.jl) package for visualization.
 
 ## Introduction
@@ -87,7 +89,7 @@ julia> QM.active_vertex_degrees(mesh)
  2
 ```
 
-You can use the `square_mesh` function to create uniform mesh of size `n x n` with `n` quads along each side,
+You can use the `square_mesh` function to create a uniform mesh of size `n x n` with `n` quads along each side. This is mainly for testing and debugging,
 
 ```
 julia> QM.square_mesh(4)
@@ -101,6 +103,8 @@ node_numbers=true, elem_numbers=true, internal_order=true)
 <img src="examples/figures/4x4mesh.png" alt="drawing" width="600"/>
 
 ## Mesh Editing Operations
+
+All the mesh editing operations are defined in terms of the half-edges.
 
 ### Edge Flips
 
@@ -124,9 +128,111 @@ PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mes
 
 <img src="examples/figures/left-flip-final.png" alt="drawing" width="600"/>
 
-You can use the `is_valid_left_flip(mesh, quad_index, half_edge_index, max_degree)` to check if a particular flip is permitted or not (for example, you cannot flip a boundary half-edge). Flipping an edge changes the degrees of vertices. If an edge flip results in a vertex attaining degree greater than `max_degree`, `is_valid_left_flip` will return `false`.
+You can use the `is_valid_left_flip(mesh, quad_index, half_edge_index, max_degree)` to check if a particular flip is permitted or not (for example, you cannot flip a boundary half-edge). Flipping an edge changes the degrees of vertices. If an edge flip results in a vertex attaining degree greater than `max_degree`, `is_valid_left_flip` will return `false`. The default value is `max_degree = 7`.
 
 All of the above applies to `right_flip!` and `is_valid_right_flip` with the difference being that the edge is rotated clockwise.
 
 ### Vertex split
 
+A vertex split introduces a new vertex and a new quad. Even though we are splitting a vertex, we parameterize it in terms of half-edges, since one vertex can be split in multiple different ways. The syntax is `QuadMeshGame.split!(mesh, quad_index, half_edge_index)`.
+
+Splitting a half-edge results in the duplication of it's origin vertex. This vertex is then moved to the average position of the source and destination. The original vertex, the duplicate, and vertices from the quads on either side of the half edge are used to construct a new quad. 
+
+Here's an example,
+
+```
+mesh = QM.square_mesh(2)
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    node_numbers=true, elem_numbers=true, internal_order=true)
+```
+
+<img src="examples/figures/split-initial.png" alt="drawing" width="600"/>
+
+```
+QM.split!(mesh, 4, 1)
+```
+
+<img src="examples/figures/split-final.png" alt="drawing" width="600"/>
+
+A simple version of mesh smoothing is implemented,
+
+```
+QM.averagesmoothing!(mesh)
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    node_numbers=true, elem_numbers=true, internal_order=true)
+```
+
+<img src="examples/figures/split-final-smoothed.png" alt="drawing" width="600"/>
+
+Once again, you can use `is_valid_split(mesh, quad_index, half_edge_index, max_degree)` to determine if a split is valid or not.
+
+
+### Diamond collapse
+
+A collapse can be seen as the inverse of a split. (`QuadMeshGame` does __not__ reverse the operation -- the indices of quads and vertices will not be reverted if you collapse a quad that was generated from a split.) Once again, we define the collapse in terms of half-edges. 
+
+The syntax is `QuadMeshGame.collapse!(mesh, quad_index, half_edge_index)`. The quad `quad_index` is collapsed by merging the source vertex of `half_edge_index` with the vertex diagonally across in the quad `quad_index`. If either vertex is on the boundary, the merged vertex is located on the boundary. Otherwise, the merged vertex is placed at the average position of the original vertices. Here's an example,
+
+```
+mesh = QM.square_mesh(2)
+QM.collapse!(mesh, 4, 1)
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    node_numbers=true, elem_numbers=true, internal_order=true)
+```
+
+<img src="examples/figures/collapse-final.png" alt="drawing" width="600"/>
+
+
+### Reindexing the mesh
+
+Since we allocate buffers for the mesh object, you may end up with a situation where the `active_quad_connectivity` contains indices which are greater than the number of vertices in the `active_vertex_coordinates` matrix. If you try to plot, `PyPlot` will complain that you are accessing out of bounds. We therefore provide a function to reindex the quads and vertices in a `QuadMesh`.
+
+Here's an example,
+
+```
+julia> mesh = QM.square_mesh(2)
+QuadMesh
+        Num Vert : 9
+        Num Quad : 4
+
+
+julia> QM.collapse!(mesh, 3, 2)
+true
+
+julia> QM.number_of_vertices(mesh)
+8
+
+julia> QM.active_quad_connectivity(mesh)
+4×3 Matrix{Int64}:
+ 1  2  7
+ 4  7  8
+ 7  6  9
+ 2  3  6
+ ```
+
+ Observe that the mesh has 8 vertices -- since we collapsed quad 3, we ended up merging vertex 5 and 7, effectively deleting vertex 5. However, the quad connectivity is referencing vertex 9. We can understand this by looking at `mesh.active_vertex`
+
+ ```
+julia> mesh.active_vertex[1:9]
+9-element BitVector:
+ 1
+ 1
+ 1
+ 1
+ 0
+ 1
+ 1
+ 1
+ 1
+ ```
+
+ Vertex 5 was deleted by simply setting it as inactive. If you try to plot this mesh you will get an error,
+
+ ```
+julia> fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+           node_numbers=true, elem_numbers=true, internal_order=true)
+ERROR: PyError ($(Expr(:escape, :(ccall(#= /Users/arjun/.julia/packages/PyCall/7a7w0/src/pyfncall.jl:43 =# @pysym(:PyObject_Call), PyPtr, (PyPtr, PyPtr, PyPtr), o, pyargsptr, kw))))) <class 'ValueError'>
+ValueError('triangles max element is out of bounds')
+ ```
+
+ 

@@ -496,6 +496,7 @@ function reindex_quads!(mesh::QuadMesh)
     mesh.active_quad = falses(quad_buffer_size)
     mesh.active_quad[1:num_quads] .= true
 
+    return new_quad_indices
 end
 
 function reindex_vertices!(mesh::QuadMesh)

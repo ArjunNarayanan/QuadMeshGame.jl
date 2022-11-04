@@ -1,4 +1,4 @@
-function is_valid_split(mesh, quad, edge, maxdegree)
+function is_valid_split(mesh, quad, edge, maxdegree = 7)
     # check that current quad is active and edge along split is interior
     if !is_active_quad(mesh, quad) || !has_neighbor(mesh, quad, edge)
         return false

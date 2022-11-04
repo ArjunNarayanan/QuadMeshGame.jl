@@ -1,4 +1,4 @@
-function is_valid_collapse(mesh, quad, edge, maxdegree)
+function is_valid_collapse(mesh, quad, edge, maxdegree = 7)
     # check that current quad is active
     if !is_active_quad(mesh, quad)
         return false
