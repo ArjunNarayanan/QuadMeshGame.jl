@@ -104,7 +104,7 @@ node_numbers=true, elem_numbers=true, internal_order=true)
 
 ### Edge Flips
 
-An edge flip rotates an edge to get a new quad mesh. We provide a `left_flip` and `right_flip` options to rotate the edge counterclockwise or clockwise respectively. The syntax is `left_flip!(mesh, quad_index, half_edge_index)`
+An edge flip rotates an edge to get a new quad mesh. We provide `left_flip` and `right_flip` options to rotate the edge counterclockwise or clockwise respectively. The syntax is `left_flip!(mesh, quad_index, half_edge_index)`
 
 Here's an example:
 
@@ -124,4 +124,9 @@ PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mes
 
 <img src="examples/figures/left-flip-final.png" alt="drawing" width="600"/>
 
-You can use the `is_valid_left_flip(mesh, quad_index, half_edge_index, max_degree)` 
+You can use the `is_valid_left_flip(mesh, quad_index, half_edge_index, max_degree)` to check if a particular flip is permitted or not (for example, you cannot flip a boundary half-edge). Flipping an edge changes the degrees of vertices. If an edge flip results in a vertex attaining degree greater than `max_degree`, `is_valid_left_flip` will return `false`.
+
+All of the above applies to `right_flip!` and `is_valid_right_flip` with the difference being that the edge is rotated clockwise.
+
+### Vertex split
+
