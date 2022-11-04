@@ -84,3 +84,13 @@ fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivi
 fig.tight_layout()
 fig.savefig("examples/figures/reindexed.png")
 ##
+
+##
+mesh = QM.square_mesh(2)
+desired_degree = deepcopy(QM.active_vertex_degrees(mesh))
+QM.left_flip!(mesh, 1, 3)
+current_degree = deepcopy(QM.active_vertex_degrees(mesh))
+vertex_score = desired_degree - current_degree
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), vertex_score = vertex_score)
+fig.savefig("examples/figures/vertex_score.png")
+##
