@@ -34,12 +34,12 @@ We can do this as follows:
 
 ```
 PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
-node_numbers=true, elem_numbers=true, internal_order=true)
+number_vertices=true, number_elements=true, internal_order=true)
 ```
 
 <img src="examples/figures/2x2mesh.png" alt="drawing" width="600"/>
 
-The red numbers in the above figure refers to the local numbering of vertices in each quad. We use this to locally index the edges in each quad. For example `quad 2, edge 2` refers to the edge from vertex 5 to vertex 6 in the above figure.
+The red numbers in the above figure refer to the local numbering of vertices in each quad. We use this to locally index the edges in each quad. For example `quad 2, edge 2` refers to the edge from vertex 5 to vertex 6 in the above figure.
 
 The `QuadMesh` object contains some useful information. You can look at the connectivity between quads. This tells you the index of your neighboring quad across a particular local edge. 
 
@@ -97,7 +97,7 @@ QuadMesh
         Num Vert : 25
         Num Quad : 16
 julia> fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
-node_numbers=true, elem_numbers=true, internal_order=true)
+number_vertices=true, number_elements=true, internal_order=true)
 ```
 
 <img src="examples/figures/4x4mesh.png" alt="drawing" width="600"/>
@@ -115,7 +115,7 @@ Here's an example:
 ```
 mesh = QM.square_mesh(2)
 PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
-    node_numbers=true, elem_numbers=true, internal_order=true)
+    number_vertices=true, number_elements=true, internal_order=true)
 ```
 
 <img src="examples/figures/left-flip-initial.png" alt="drawing" width="600"/>
@@ -123,7 +123,7 @@ PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mes
 ```
 QM.left_flip!(mesh, 2, 1)
 PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
-    node_numbers=true, elem_numbers=true, internal_order=true)
+    number_vertices=true, number_elements=true, internal_order=true)
 ```
 
 <img src="examples/figures/left-flip-final.png" alt="drawing" width="600"/>
@@ -143,7 +143,7 @@ Here's an example,
 ```
 mesh = QM.square_mesh(2)
 fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
-    node_numbers=true, elem_numbers=true, internal_order=true)
+    number_vertices=true, number_elements=true, internal_order=true)
 ```
 
 <img src="examples/figures/split-initial.png" alt="drawing" width="600"/>
@@ -159,7 +159,7 @@ A simple version of mesh smoothing is implemented,
 ```
 QM.averagesmoothing!(mesh)
 fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
-    node_numbers=true, elem_numbers=true, internal_order=true)
+    number_vertices=true, number_elements=true, internal_order=true)
 ```
 
 <img src="examples/figures/split-final-smoothed.png" alt="drawing" width="600"/>
@@ -177,7 +177,7 @@ The syntax is `QuadMeshGame.collapse!(mesh, quad_index, half_edge_index)`. The q
 mesh = QM.square_mesh(2)
 QM.collapse!(mesh, 4, 1)
 fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
-    node_numbers=true, elem_numbers=true, internal_order=true)
+    number_vertices=true, number_elements=true, internal_order=true)
 ```
 
 <img src="examples/figures/collapse-final.png" alt="drawing" width="600"/>
@@ -230,7 +230,7 @@ julia> mesh.active_vertex[1:9]
 
  ```
 julia> fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
-           node_numbers=true, elem_numbers=true, internal_order=true)
+           number_vertices=true, number_elements=true, internal_order=true)
 ERROR: PyError ($(Expr(:escape, :(ccall(#= /Users/arjun/.julia/packages/PyCall/7a7w0/src/pyfncall.jl:43 =# @pysym(:PyObject_Call), PyPtr, (PyPtr, PyPtr, PyPtr), o, pyargsptr, kw))))) <class 'ValueError'>
 ValueError('triangles max element is out of bounds')
  ```
@@ -245,7 +245,7 @@ QM.reindex_quads!(mesh)
 QM.reindex_vertices!(mesh)
 
 fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
-    node_numbers=true, elem_numbers=true, internal_order=true)
+    number_vertices=true, number_elements=true, internal_order=true)
  ```
 
  <img src="examples/figures/reindexed.png" alt="drawing" width="600"/>
