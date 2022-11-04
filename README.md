@@ -235,4 +235,17 @@ ERROR: PyError ($(Expr(:escape, :(ccall(#= /Users/arjun/.julia/packages/PyCall/7
 ValueError('triangles max element is out of bounds')
  ```
 
- 
+ You can plot after reindexing the mesh,
+
+ ```
+mesh = QM.square_mesh(2)
+QM.collapse!(mesh, 3, 2)
+
+QM.reindex_quads!(mesh)
+QM.reindex_vertices!(mesh)
+
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    node_numbers=true, elem_numbers=true, internal_order=true)
+ ```
+
+ <img src="examples/figures/reindexed.png" alt="drawing" width="600"/>
