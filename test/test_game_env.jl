@@ -34,17 +34,23 @@ test_vs = [0,1,0,-1,-1,0,1,0,0]
 @test !env.is_terminated
 
 
-mesh = QM.square_mesh(2, quad_buffer=4, vertex_buffer=9)
+mesh = QM.square_mesh(2)
 pairs = QM.make_edge_pairs(mesh)
-test_pairs = [17,12,5,17,3,16,17,17,17,17,13,2,11,17,17,6]
+nquads = QM.quad_buffer(mesh)
+bdry = nquads*4 + 1
+test_pairs = [0,12,5,0,3,16,0,0,0,0,13,2,11,0,0,6]
+test_pairs = [test_pairs; zeros(Int, 4*nquads - length(test_pairs))]
+test_pairs[test_pairs .== 0] .= bdry
 @test allequal(pairs, test_pairs)
 
 @test QM.left_flip!(mesh, 2, 2)
 pairs = QM.make_edge_pairs(mesh)
-test_pairs = [17,12,8,17,11,16,17,3,17,17,5,2,17,17,17,6]
+test_pairs = [0,12,8,0,11,16,0,3,0,0,5,2,0,0,0,6]
+test_pairs = [test_pairs; zeros(Int, 4*nquads - length(test_pairs))]
+test_pairs[test_pairs .== 0] .= bdry
 @test allequal(pairs, test_pairs)
 
-mesh = QM.square_mesh(2, quad_buffer = 4, vertex_buffer=9)
+mesh = QM.square_mesh(2)
 x = reshape(mesh.connectivity, 1, :)
 cx = QM.cycle_edges(x)
 
@@ -65,10 +71,10 @@ test_cx4 = [5 8 9 6
             9 6 5 8
             6 5 8 9]
 test_cx = cat(test_cx1, test_cx2, test_cx3, test_cx4, dims=2)
-@test allequal(cx, test_cx)
+@test allequal(cx[:,1:16], test_cx)
 
 
-mesh = QM.square_mesh(3, vertex_buffer=16, quad_buffer=9)
+mesh = QM.square_mesh(3)
 template = QM.make_template(mesh)
 
 test_elem_5_1 = [6,10,11,7,5,9,14,15,12,8,3,2,2,1,0,0,13,14,9,13,0,0,16,12,15,16,0,0,4,3,8,4,0,0,1,5]
@@ -189,7 +195,7 @@ on_boundary = trues(8)
 ############################################################################################################
 
 
-mesh = QM.square_mesh(3, vertex_buffer=16, quad_buffer=9)
+mesh = QM.square_mesh(3)
 pairs = QM.make_edge_pairs(mesh)
 
 x = reshape(mesh.connectivity, 1, :)

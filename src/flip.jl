@@ -1,4 +1,4 @@
-function is_valid_left_flip(mesh::QuadMesh, quad, edge, maxdegree)
+function is_valid_left_flip(mesh::QuadMesh, quad, edge, maxdegree = 7)
     if !is_active_quad(mesh, quad) || !has_neighbor(mesh, quad, edge)
         return false
     end
@@ -26,7 +26,7 @@ function is_valid_left_flip(mesh::QuadMesh, quad, edge, maxdegree)
     return true
 end
 
-function is_valid_right_flip(mesh::QuadMesh, quad, edge, maxdegree)
+function is_valid_right_flip(mesh::QuadMesh, quad, edge, maxdegree = 7)
     if !is_active_quad(mesh, quad) || !has_neighbor(mesh, quad, edge)
         return false
     end

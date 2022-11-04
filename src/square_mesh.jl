@@ -107,27 +107,14 @@ end
 
 function square_mesh(
     nquads_per_side;
-    quad_buffer = 10,
-    vertex_buffer = 15,
-    growth_factor = 2,
 )
     nvertices_per_side = nquads_per_side + 1
     vertices = make_vertices(nvertices_per_side)
     connectivity = make_connectivity(nquads_per_side)
-    q2q = make_q2q(nquads_per_side)
-    e2e = make_e2e(nquads_per_side)
-    degree = make_degree(nquads_per_side)
-    on_boundary = make_vertex_on_boundary(nquads_per_side)
+    
 
     return QuadMesh(
         vertices,
         connectivity,
-        q2q,
-        e2e,
-        degree,
-        on_boundary,
-        quad_buffer = quad_buffer,
-        vertex_buffer = vertex_buffer,
-        growth_factor = growth_factor,
     )
 end

@@ -4,7 +4,7 @@
 
 This package implements connectivity editing operations on Quad Meshes. A Quad Mesh is a 2D mesh where all the elements are quadrilaterals. You can use the [PlotQuadMesh.jl](https://github.com/ArjunNarayanan/PlotQuadMesh.jl) package for visualization.
 
-## Example Usage
+## Introduction
 
 A Quad Mesh can be defined by providing the coordinates of the vertices and the connectivity of each quad element. As an example, let's create a `2x2` mesh:
 
@@ -27,8 +27,6 @@ mesh = QM.QuadMesh(vertices, connectivity)
 `vertices` is expected to be a `2 x num_vertices` matrix of vertex coordinates. `connectivity` is expected to be a `4 x num_quads` matrix of integers representing the connectivity of each quad (one quad per column). The vertices are assumed to be in counter-clockwise order. Note that this can be used to locally order the edges of each quad.
 
 The `QuadMesh` object is dynamic -- the number of vertices and quads can change based on the editing operations (described later). Hence, we allocate a larger buffer to store the vertex coordinates and connectivity matrices and keep track of __active vertices__ and __active quads__. While visualizing, we should supply only the active vertices and quads to the plotter. 
-
-The edges of each quad can be considered to be ordered. For example 
 
 We can do this as follows:
 
@@ -71,4 +69,59 @@ How do we interpret `e2e[1,4] = 3`? Note that quad 4 has as neighbor quad 3 acro
 q2q[e2e[e, q], q2q[e, q]] == q
 ```
 
-`q2q` and `e2e` is a representation of the [Half-edge datastructure](https://cs184.eecs.berkeley.edu/sp19/article/15/the-half-edge-data-structure) which is an effective datastructure to store and manipulate the topology of meshes.
+`q2q` and `e2e` is a representation of the [Half-edge datastructure](https://cs184.eecs.berkeley.edu/sp19/article/15/the-half-edge-data-structure) which is an effective datastructure to store and manipulate the topology of meshes. What we have been referring to as "local edges" so far are in fact half-edges. For consistency with prior work, we will refer to them as half-edges from henceforth.
+
+We can look at the degree (i.e. number of incident edges) of all the active vertices:
+
+```
+julia> QM.active_vertex_degrees(mesh)
+9-element Vector{Int64}:
+ 2
+ 3
+ 2
+ 3
+ 4
+ 3
+ 2
+ 3
+ 2
+```
+
+You can use the `square_mesh` function to create uniform mesh of size `n x n` with `n` quads along each side,
+
+```
+julia> QM.square_mesh(4)
+QuadMesh
+        Num Vert : 25
+        Num Quad : 16
+julia> fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+node_numbers=true, elem_numbers=true, internal_order=true)
+```
+
+<img src="examples/figures/4x4mesh.png" alt="drawing" width="600"/>
+
+## Mesh Editing Operations
+
+### Edge Flips
+
+An edge flip rotates an edge to get a new quad mesh. We provide a `left_flip` and `right_flip` options to rotate the edge counterclockwise or clockwise respectively. The syntax is `left_flip!(mesh, quad_index, half_edge_index)`
+
+Here's an example:
+
+```
+mesh = QM.square_mesh(2)
+PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    node_numbers=true, elem_numbers=true, internal_order=true)
+```
+
+<img src="examples/figures/left-flip-initial.png" alt="drawing" width="600"/>
+
+```
+QM.left_flip!(mesh, 2, 1)
+PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    node_numbers=true, elem_numbers=true, internal_order=true)
+```
+
+<img src="examples/figures/left-flip-final.png" alt="drawing" width="600"/>
+
+You can use the `is_valid_left_flip(mesh, quad_index, half_edge_index, max_degree)` 

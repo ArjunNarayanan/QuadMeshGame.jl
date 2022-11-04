@@ -63,7 +63,8 @@ test_degrees = [2,3,2,3,4,3,2,3,2]
 @test allequal(test_degrees, degrees)
 
 
-mesh = QM.square_mesh(2, quad_buffer = 10, vertex_buffer = 15, growth_factor = 2)
+# mesh = QM.square_mesh(2, quad_buffer = 10, vertex_buffer = 15, growth_factor = 2)
+mesh = QM.square_mesh(2)
 
 @test allequal(mesh.vertices[:, 1:9], testvertices)
 @test allequal(mesh.connectivity[:, 1:4], testconn)
@@ -72,50 +73,50 @@ mesh = QM.square_mesh(2, quad_buffer = 10, vertex_buffer = 15, growth_factor = 2
 @test allequal(mesh.degree[1:9], test_degree)
 @test allequal(mesh.vertex_on_boundary[1:9], test_on_boundary)
 
-test_active_vertex = falses(15)
-test_active_vertex[1:9] .= true
-@test allequal(mesh.active_vertex, test_active_vertex)
-test_active_quad = falses(10)
-test_active_quad[1:4] .= true
-@test allequal(mesh.active_quad, test_active_quad)
+
+@test allequal(mesh.active_vertex[1:9], trues(9))
+@test count(mesh.active_vertex) == 9
+@test allequal(mesh.active_quad[1:4], trues(4))
+@test count(mesh.active_quad) == 4
 
 @test QM.number_of_vertices(mesh) == 9
 @test QM.number_of_quads(mesh) == 4
 
+vert_buffer = QM.vertex_buffer(mesh)
+quad_buffer = QM.quad_buffer(mesh)
+growth = mesh.growth_factor
 
+new_vert_buffer = growth * vert_buffer
 QM.expand_vertices!(mesh)
-@test size(mesh.vertices, 2) == 30
-@test length(mesh.degree) == 30
-@test length(mesh.vertex_on_boundary) == 30
-@test length(mesh.active_vertex) == 30
+@test size(mesh.vertices, 2) == new_vert_buffer
+@test length(mesh.degree) == new_vert_buffer
+@test length(mesh.vertex_on_boundary) == new_vert_buffer
+@test length(mesh.active_vertex) == new_vert_buffer
 @test allequal(mesh.vertices[:, 1:9], testvertices)
 @test allequal(mesh.degree[1:9], test_degree)
-@test allequal(mesh.active_vertex, [test_active_vertex; falses(15)])
 @test mesh.num_vertices == 9
 
+new_quad_buffer = growth * quad_buffer
 QM.expand_quad!(mesh)
-@test size(mesh.connectivity, 2) == 20
-@test size(mesh.q2q, 2) == 20
-@test size(mesh.e2e, 2) == 20
-@test length(mesh.active_quad) == 20
+@test size(mesh.connectivity, 2) == new_quad_buffer
+@test size(mesh.q2q, 2) == new_quad_buffer
+@test size(mesh.e2e, 2) == new_quad_buffer
+@test length(mesh.active_quad) == new_quad_buffer
 @test allequal(mesh.connectivity[:,1:4], testconn)
 @test allequal(mesh.q2q[:,1:4], test_q2q)
 @test allequal(mesh.e2e[:,1:4], test_e2e)
-@test allequal(mesh.active_quad, [test_active_quad; falses(10)])
 @test mesh.num_quads == 4
 
 
-mesh = QM.square_mesh(2, quad_buffer = 4, vertex_buffer = 9, growth_factor = 2)
+# mesh = QM.square_mesh(2, quad_buffer = 4, vertex_buffer = 9, growth_factor = 2)
+mesh = QM.square_mesh(2)
 new_idx = QM.insert_vertex!(mesh, [0.25, 0.5], 3, false)
 @test new_idx == 10
-@test QM.vertex_buffer(mesh) == 18
-@test QM.number_of_vertices(mesh) == 10
 testvertices = [
     0.0 0.0 0.0 0.5 0.5 0.5 1.0 1.0 1.0 0.25
     0.0 0.5 1.0 0.0 0.5 1.0 0.0 0.5 1.0 0.5
 ]
 @test allequal(testvertices, mesh.vertices[:,1:10])
-@test QM.quad_buffer(mesh) == 4
 @test !QM.vertex_on_boundary(mesh, 10)
 @test QM.is_active_vertex(mesh, 10)
 

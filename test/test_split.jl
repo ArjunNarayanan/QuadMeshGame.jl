@@ -141,36 +141,31 @@ test_q2q = [
 @test allequal(test_q2q, mesh.q2q[:,1:5])
 
 
-mesh = QM.square_mesh(2, quad_buffer=10)
+mesh = QM.square_mesh(2)
 @test QM.split!(mesh, 1, 3)
 @test QM.collapse!(mesh, 2, 4)
 QM.reindex_quads!(mesh)
 
-test_active_quad = falses(10)
-test_active_quad[1:4] .= true
-@test allequal(mesh.active_quad, test_active_quad)
+@test allequal(mesh.active_quad[1:4], trues(4))
 @test QM.number_of_quads(mesh) == 4
 
 test_conn = [1 4 5 3
              4 7 8 4
              3 8 9 5
              2 5 6 6]
-test_conn = QM.zero_pad(test_conn, 10)
-@test allequal(test_conn, mesh.connectivity)
+@test allequal(test_conn, QM.active_quad_connectivity(mesh))
 test_q2q = [0 0 2 1
             4 0 0 2
             0 3 0 3
             0 4 4 0]
-test_q2q = QM.zero_pad(test_q2q, 10)
-@test allequal(test_q2q, mesh.q2q)
+@test allequal(test_q2q, QM.active_quad_q2q(mesh))
 test_e2e = [0 0 3 2
             1 0 0 4
             0 1 0 4
             0 2 3 0]
-test_e2e = QM.zero_pad(test_e2e, 10)
-@test allequal(mesh.e2e, test_e2e)
+@test allequal(QM.active_quad_e2e(mesh), test_e2e)
 
-mesh = QM.square_mesh(2, quad_buffer = 10, vertex_buffer = 20)
+mesh = QM.square_mesh(2)
 @test QM.split!(mesh, 1, 3)
 @test QM.collapse!(mesh, 5, 1)
 @test QM.collapse!(mesh, 4, 3)
@@ -180,22 +175,20 @@ QM.reindex_vertices!(mesh)
 @test QM.number_of_quads(mesh) == 3
 @test QM.number_of_vertices(mesh) == 8
 
-active_verts = [trues(8); falses(12)]
-@test allequal(mesh.active_vertex, active_verts)
-active_quads = [trues(3); falses(7)]
-@test allequal(mesh.active_quad, active_quads)
+@test all(mesh.active_vertex[1:8])
+@test count(mesh.active_vertex) == 8
+@test all(mesh.active_quad[1:3])
+@test count(mesh.active_quad) == 3
 
 testvertices = [0.  0.  0.  0.5  0.5  1.  1.  1.
                 0.  0.5 1.  0.   1.   0.  0.5 1.]
-testvertices = QM.zero_pad(testvertices, 20)
-@test allequal(testvertices, mesh.vertices)
+@test allequal(testvertices, QM.active_vertex_coordinates(mesh))
 
 conn = [1 2 4
         4 8 6
         8 5 7
         2 3 8]
-conn = QM.zero_pad(conn, 10)
-@test allequal(mesh.connectivity, conn)
+@test allequal(QM.active_quad_connectivity(mesh), conn)
 
 
 
