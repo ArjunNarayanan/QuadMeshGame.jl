@@ -10,7 +10,7 @@ This package implements connectivity editing operations on Quad Meshes. A Quad M
 
 A Quad Mesh can be defined by providing the coordinates of the vertices and the connectivity of each quad element. As an example, let's create a `2x2` mesh:
 
-```
+```julia
 using Revise
 using QuadMeshGame
 using PlotQuadMesh
@@ -32,7 +32,7 @@ The `QuadMesh` object is dynamic -- the number of vertices and quads can change 
 
 We can do this as follows:
 
-```
+```julia
 PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
 number_vertices=true, number_elements=true, internal_order=true)
 ```
@@ -43,7 +43,7 @@ The red numbers in the above figure refer to the local numbering of vertices in 
 
 The `QuadMesh` object contains some useful information. You can look at the connectivity between quads. This tells you the index of your neighboring quad across a particular local edge. 
 
-```
+```julia
 julia> q2q = QM.active_quad_q2q(mesh)
 4×4 Matrix{Int64}:
  0  1  0  3
@@ -56,7 +56,7 @@ julia> q2q = QM.active_quad_q2q(mesh)
 
 You can obtain the local edge of your neighbor as follows:
 
-```
+```julia
 julia> e2e = QM.active_quad_e2e(mesh)
 4×4 Matrix{Int64}:
  0  3  0  3
@@ -67,7 +67,7 @@ julia> e2e = QM.active_quad_e2e(mesh)
 
 How do we interpret `e2e[1,4] = 3`? Note that quad 4 has as neighbor quad 3 across local edge 1. Note also that quad 3 has quad 4 as neighbor across local edge 3. This is what the `e2e` matrix stores. In particular,
 
-```
+```julia
 q2q[e2e[e, q], q2q[e, q]] == q
 ```
 
@@ -75,7 +75,7 @@ q2q[e2e[e, q], q2q[e, q]] == q
 
 We can look at the degree (i.e. number of incident edges) of all the active vertices:
 
-```
+```julia
 julia> QM.active_vertex_degrees(mesh)
 9-element Vector{Int64}:
  2
@@ -91,7 +91,7 @@ julia> QM.active_vertex_degrees(mesh)
 
 You can use the `square_mesh` function to create a uniform mesh of size `n x n` with `n` quads along each side. This is mainly for testing and debugging,
 
-```
+```julia
 julia> QM.square_mesh(4)
 QuadMesh
         Num Vert : 25
@@ -112,7 +112,7 @@ An edge flip rotates an edge to get a new quad mesh. We provide `left_flip` and 
 
 Here's an example:
 
-```
+```julia
 mesh = QM.square_mesh(2)
 PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
     number_vertices=true, number_elements=true, internal_order=true)
@@ -120,7 +120,7 @@ PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mes
 
 <img src="examples/figures/left-flip-initial.png" alt="drawing" width="600"/>
 
-```
+```julia
 QM.left_flip!(mesh, 2, 1)
 PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
     number_vertices=true, number_elements=true, internal_order=true)
@@ -140,7 +140,7 @@ Splitting a half-edge results in the duplication of it's origin vertex. This ver
 
 Here's an example,
 
-```
+```julia
 mesh = QM.square_mesh(2)
 fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
     number_vertices=true, number_elements=true, internal_order=true)
@@ -148,7 +148,7 @@ fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivi
 
 <img src="examples/figures/split-initial.png" alt="drawing" width="600"/>
 
-```
+```julia
 QM.split!(mesh, 4, 1)
 ```
 
@@ -156,7 +156,7 @@ QM.split!(mesh, 4, 1)
 
 A simple version of mesh smoothing is implemented,
 
-```
+```julia
 QM.averagesmoothing!(mesh)
 fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
     number_vertices=true, number_elements=true, internal_order=true)
@@ -173,7 +173,7 @@ A collapse can be seen as the inverse of a split. (`QuadMeshGame` does __not__ r
 
 The syntax is `QuadMeshGame.collapse!(mesh, quad_index, half_edge_index)`. The quad `quad_index` is collapsed by merging the source vertex of `half_edge_index` with the vertex diagonally across in the quad `quad_index`. If either vertex is on the boundary, the merged vertex is located on the boundary. Otherwise, the merged vertex is placed at the average position of the original vertices. Here's an example,
 
-```
+```julia
 mesh = QM.square_mesh(2)
 QM.collapse!(mesh, 4, 1)
 fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
@@ -190,7 +190,7 @@ Since we allocate buffers for the mesh object, you may end up with a situation w
 
 Here's an example,
 
-```
+```julia
 julia> mesh = QM.square_mesh(2)
 QuadMesh
         Num Vert : 9
@@ -213,7 +213,7 @@ julia> QM.active_quad_connectivity(mesh)
 
  Observe that the mesh has 8 vertices -- since we collapsed quad 3, we ended up merging vertex 5 and 7, effectively deleting vertex 5. However, the quad connectivity is referencing vertex 9. We can understand this by looking at `mesh.active_vertex`
 
- ```
+ ```julia
 julia> mesh.active_vertex[1:9]
 9-element BitVector:
  1
@@ -229,7 +229,7 @@ julia> mesh.active_vertex[1:9]
 
  Vertex 5 was deleted by simply setting it as inactive. If you try to plot this mesh you will get an error,
 
- ```
+ ```julia
 julia> fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
            number_vertices=true, number_elements=true, internal_order=true)
 ERROR: PyError ($(Expr(:escape, :(ccall(#= /Users/arjun/.julia/packages/PyCall/7a7w0/src/pyfncall.jl:43 =# @pysym(:PyObject_Call), PyPtr, (PyPtr, PyPtr, PyPtr), o, pyargsptr, kw))))) <class 'ValueError'>
@@ -238,7 +238,7 @@ ValueError('triangles max element is out of bounds')
 
  You can plot after reindexing the mesh,
 
- ```
+ ```julia
 mesh = QM.square_mesh(2)
 QM.collapse!(mesh, 3, 2)
 
@@ -268,7 +268,7 @@ Most people would prefer the mesh on the left to the mesh on the right.
  
  `PlotQuadMesh` helps with visualizing the vertex scores. Here's an example,
 
- ```
+ ```julia
 mesh = QM.square_mesh(2)
 desired_degree = deepcopy(QM.active_vertex_degrees(mesh))
 QM.left_flip!(mesh, 1, 3)
