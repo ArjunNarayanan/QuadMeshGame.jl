@@ -271,8 +271,7 @@ Most people would prefer the mesh on the left to the mesh on the right.
 mesh = QM.square_mesh(2)
 desired_degree = deepcopy(QM.active_vertex_degrees(mesh))
 QM.left_flip!(mesh, 1, 3)
-current_degree = deepcopy(QM.active_vertex_degrees(mesh))
-vertex_score = desired_degree - current_degree
+vertex_score = desired_degree - QM.active_vertex_degrees(mesh)
 PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), vertex_score = vertex_score)
  ```
 
@@ -304,4 +303,4 @@ The `GameEnv` keeps track of a few things for you.
 You can perform all the actions discussed above on the `GameEnv`, using the syntax `step_left_flip!(env, quad_index, half_edge_index)`, `step_right_flip!(env, quad_index, half_edge_index)`, `step_split!(env, quad_index, half_edge_index)`, and `step_collapse!(env, quad_index, half_edge_index)`. All of these functions accept a keyword argument `no_action_reward` -- if the requested action is not valid, the environment records this value as the reward. 
 
 
-You've probably guessed that the language here is reminiscent of Reinforcement Learning. That is indeed the case. In particular the `env.template` stores an ordered list of vertices for each half edge. By looking at the scores of these vertices, an intelligent agent could determine what action needs to be taken to improve the quality of the mesh. This is precisely what I implement in my other package [ProximalPolicyOptimization.jl](https://github.com/ArjunNarayanan/ProximalPolicyOptimization.jl) where I implement the [proximal policy optimization](https://openai.com/blog/openai-baselines-ppo/) reinforcement learning algorithm to learn to optimize mesh topologies!
+You've probably guessed that the language here is reminiscent of Reinforcement Learning. That is indeed the idea! In particular the `env.template` stores an ordered list of vertices for each half edge. By looking at the scores of these vertices, an intelligent agent could determine what action needs to be taken to improve the quality of the mesh. This is precisely what I implement in my other package [ProximalPolicyOptimization.jl](https://github.com/ArjunNarayanan/ProximalPolicyOptimization.jl) which uses the [proximal policy optimization](https://openai.com/blog/openai-baselines-ppo/) algorithm to learn to play `QuadMeshGame`!
