@@ -279,7 +279,7 @@ PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mes
 
 <img src="examples/figures/vertex_score.png" alt="drawing" width="600"/>
 
-The quality of a mesh, in terms of its connectivity, can be boiled down to a single number as the sum of the absolute vertex scores `score = sum(abs.(vertex_score))`. We can try to optimize the connectivity of the mesh by driving down this score to zero. Note that all our actions are _zero sum_ i.e. `sum(vertex_score) = 0` before and after any action. Thus, we have a lower bound on our score since `abs(sum(vertex_score)) <= sum(abs.(vertex_score))`. I don't know if you can always achieve this optimum, but it is helpful to measure how well we are doing.
+The quality of a mesh, in terms of its connectivity, can be boiled down to a single number as the sum of the absolute vertex scores `score = sum(abs.(vertex_score))`. We can try to optimize the connectivity of the mesh by driving down this score to zero. Note that all our actions are _zero sum_ i.e. `sum(vertex_score)` is the same before and after any action. Thus, we have a lower bound on our score metric since `abs(sum(vertex_score)) <= sum(abs.(vertex_score))`. I don't know if you can always achieve this optimum, but it is helpful to measure how well we are doing.
 
 To deal with this setup, we provide a `GameEnv` with constructor `QuadMeshGame.GameEnv(mesh, desired_degree, max_actions)`.
 
