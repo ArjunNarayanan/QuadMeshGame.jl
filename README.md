@@ -278,3 +278,31 @@ PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mes
  ```
 
 <img src="examples/figures/vertex_score.png" alt="drawing" width="600"/>
+
+The quality of a mesh, in terms of its connectivity, can be boiled down to a single number as the sum of the absolute vertex scores `score = sum(abs.(vertex_score))`. We can try to optimize the connectivity of the mesh by driving down this score to zero. Note that all our actions are _zero sum_ i.e. `sum(vertex_score) = 0` before and after any action. Thus, we have a lower bound on our score since `abs(sum(vertex_score)) <= sum(abs.(vertex_score))`. I don't know if you can always achieve this optimum, but it is helpful to measure how well we are doing.
+
+To deal with this setup, we provide a `GameEnv` with constructor `QuadMeshGame.GameEnv(mesh, desired_degree, max_actions)`.
+
+```julia
+julia> mesh = QM.square_mesh(3);
+julia> desired_degree = [3,6,4,5,4,3,5,4,3,4,4,5,3,5,5,4];
+julia> env = QM.GameEnv(mesh, desired_degree, 10)
+GameEnv
+        16 vertices
+        9 quads
+        21 current score
+        10 remaining actions
+```
+
+The `GameEnv` keeps track of a few things for you. 
+
+- `env.num_action` : the number of actions taken so far
+- `env.current_score` : equal to `sum(abs.(env.vertex_score))`
+- `env.opt_score` : the optimum score equal to `abs(sum(env.vertex_score))`
+- `env.reward` : the reward for the previous action equal to the difference between `env.current_score` before and after the action.
+- `env.is_terminated` : whether or not the environment is terminated. The `GameEnv` is said to be terminal if the number of actions exceeds `env.max_actions` or `env.current_score == env.opt_score`.
+
+You can perform all the actions discussed above on the `GameEnv`, using the syntax `step_left_flip!(env, quad_index, half_edge_index)`, `step_right_flip!(env, quad_index, half_edge_index)`, `step_split!(env, quad_index, half_edge_index)`, and `step_collapse!(env, quad_index, half_edge_index)`. All of these functions accept a keyword argument `no_action_reward` -- if the requested action is not valid, the environment records this value as the reward. 
+
+
+You've probably guessed that the language here is reminiscent of Reinforcement Learning. Please check out my other package [ProximalPolicyOptimization.jl](https://github.com/ArjunNarayanan/ProximalPolicyOptimization.jl) that implements the [proximal policy optimization](https://openai.com/blog/openai-baselines-ppo/) reinforcement learning algorithm to learn to optimize mesh topologies!
