@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/ArjunNarayanan/QuadMeshGame.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/ArjunNarayanan/QuadMeshGame.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-This package is heavily influenced by the ideas of [Per-Olof Persson](http://persson.berkeley.edu/).
+Credit to [Per-Olof Persson](http://persson.berkeley.edu/) for giving me the idea and helping me out with this project.
 
 This package implements connectivity editing operations on Quad Meshes. A Quad Mesh is a 2D mesh where all the elements are quadrilaterals. You can use the [PlotQuadMesh.jl](https://github.com/ArjunNarayanan/PlotQuadMesh.jl) package for visualization.
 
@@ -11,7 +11,6 @@ This package implements connectivity editing operations on Quad Meshes. A Quad M
 A Quad Mesh can be defined by providing the coordinates of the vertices and the connectivity of each quad element. As an example, let's create a `2x2` mesh:
 
 ```julia
-using Revise
 using QuadMeshGame
 using PlotQuadMesh
 QM = QuadMeshGame
@@ -305,4 +304,4 @@ The `GameEnv` keeps track of a few things for you.
 You can perform all the actions discussed above on the `GameEnv`, using the syntax `step_left_flip!(env, quad_index, half_edge_index)`, `step_right_flip!(env, quad_index, half_edge_index)`, `step_split!(env, quad_index, half_edge_index)`, and `step_collapse!(env, quad_index, half_edge_index)`. All of these functions accept a keyword argument `no_action_reward` -- if the requested action is not valid, the environment records this value as the reward. 
 
 
-You've probably guessed that the language here is reminiscent of Reinforcement Learning. Please check out my other package [ProximalPolicyOptimization.jl](https://github.com/ArjunNarayanan/ProximalPolicyOptimization.jl) that implements the [proximal policy optimization](https://openai.com/blog/openai-baselines-ppo/) reinforcement learning algorithm to learn to optimize mesh topologies!
+You've probably guessed that the language here is reminiscent of Reinforcement Learning. That is indeed the case. In particular the `env.template` stores an ordered list of vertices for each half edge. By looking at the scores of these vertices, an intelligent agent could determine what action needs to be taken to improve the quality of the mesh. This is precisely what I implement in my other package [ProximalPolicyOptimization.jl](https://github.com/ArjunNarayanan/ProximalPolicyOptimization.jl) where I implement the [proximal policy optimization](https://openai.com/blog/openai-baselines-ppo/) reinforcement learning algorithm to learn to optimize mesh topologies!
