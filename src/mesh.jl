@@ -467,7 +467,7 @@ end
 
 function vertex_degrees(edges, num_vertices)
     degrees = zeros(Int, num_vertices)
-    for (i, _) in enumerate(eachcol(edges))
+    for (i, col) in enumerate(eachcol(edges))
         degrees[edges[:, i]] .+= 1
     end
     return degrees
