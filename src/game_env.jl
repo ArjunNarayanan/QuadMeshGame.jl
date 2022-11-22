@@ -128,7 +128,7 @@ function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vert
     if is_valid_split(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
 
-        new_vertex_idx = number_of_vertices(env.mesh) + 1
+        new_vertex_idx = env.mesh.new_vertex_pointer
 
         split!(env.mesh, quad, edge, maxdegree)
         # set the desired degree of the new vertex
