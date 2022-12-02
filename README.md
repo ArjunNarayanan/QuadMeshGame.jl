@@ -1,6 +1,7 @@
 # QuadMeshGame
 
 [![Build Status](https://github.com/ArjunNarayanan/QuadMeshGame.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/ArjunNarayanan/QuadMeshGame.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![codecov](https://codecov.io/gh/ArjunNarayanan/QuadMeshGame.jl/branch/main/graph/badge.svg?token=mZU47Udyrl)](https://codecov.io/gh/ArjunNarayanan/QuadMeshGame.jl)
 
 Credit to [Per-Olof Persson](http://persson.berkeley.edu/) for giving me the idea and helping me out with this project.
 
