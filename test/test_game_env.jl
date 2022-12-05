@@ -75,7 +75,7 @@ test_cx = cat(test_cx1, test_cx2, test_cx3, test_cx4, dims=2)
 
 
 mesh = QM.square_mesh(3)
-template = QM.make_template(mesh)
+template = QM.make_level3_template(mesh)
 
 test_elem_5_1 = [6,10,11,7,5,9,14,15,12,8,3,2,2,1,0,0,13,14,9,13,0,0,16,12,15,16,0,0,4,3,8,4,0,0,1,5]
 test_elem_5_2 = [10,11,7,6,14,15,12,8,3,2,5,9,9,13,0,0,16,12,15,16,0,0,4,3,8,4,0,0,1,5,2,1,0,0,13,14]
@@ -94,13 +94,6 @@ QM.step_split!(env, 1, 3)
 
 @test env.desired_degree[10] == 4
 
-template_5_1 = [10,4,5,6,2,1,7,8,8,9,3,2,6,3,0,0,0,0,0,0,0,0,9,6,4,7,0,0,0,0,0,0,0,0,1,4]
-template_5_2 = [4,5,6,10,7,8,8,9,3,2,2,1,0,0,0,0,9,6,4,7,0,0,0,0,0,0,0,0,1,4,6,3,0,0,0,0]
-@test allequal(env.template[:,17], template_5_1)
-@test allequal(env.template[:,18], template_5_2)
-
-template_3_2 = [7,8,5,4,0,0,9,6,6,10,0,0,0,0,0,0,0,0,0,0,0,0,10,4,8,9,3,2,2,1,0,0,0,0,0,0]
-@test allequal(env.template[:,10], template_3_2)
 
 QM.step_left_flip!(env, 1, 2)
 QM.step_left_flip!(env, 1, 2)
@@ -116,8 +109,6 @@ test_conn = [6 10 4 5
 @test QM.is_valid_collapse(mesh, 1, 2, 7)
 QM.step_collapse!(env, 1, 2)
 
-template_5_1 = [4,10,2,1,7,8,6,3,0,0,0,0,0,0,0,0,9,6,8,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-@test allequal(template_5_1, env.template[:,17])
 
 test_desired_degree = [[2,3,2,3,0,3,2,3,2,4]; zeros(Int, QM.vertex_buffer(env.mesh) - 10)]
 @test allequal(test_desired_degree, env.desired_degree)

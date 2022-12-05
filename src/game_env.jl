@@ -2,7 +2,6 @@ mutable struct GameEnv
     mesh::Any
     desired_degree::Any
     vertex_score::Any
-    template
     max_actions::Any
     num_actions::Any
     initial_score::Any
@@ -43,22 +42,20 @@ function GameEnv(mesh, d0, max_actions)
 
     exp_d0 = zeros(Int, nvb)
     exp_d0[mesh.active_vertex] .= d0
-    
-    # exp_d0 = [d0; zeros(Int, nvb - length(d0))]
 
     vertex_score = mesh.degree - exp_d0
-    template = make_template(mesh)
+
     opt_score = abs(sum(vertex_score))
     current_score = sum(abs.(vertex_score))
     initial_score = current_score
     reward = 0
     num_actions = 0
     is_terminated = check_terminated(num_actions, max_actions, current_score, opt_score)
+
     return GameEnv(
         mesh,
         exp_d0,
         vertex_score,
-        template,
         max_actions,
         num_actions,
         initial_score,
@@ -94,7 +91,6 @@ end
 
 function update_env_after_action(env)
     env.vertex_score = env.mesh.degree - env.desired_degree
-    env.template = make_template(env.mesh)
     env.current_score = sum(abs.(env.vertex_score))
 end
 
@@ -208,7 +204,7 @@ function zero_pad(m)
     return [m zeros(Int, size(m, 1))]
 end
 
-function make_template(mesh)
+function make_level3_template(mesh)
     pairs = make_edge_pairs(mesh)
     x = reshape(mesh.connectivity, 1, :)
 
@@ -225,7 +221,7 @@ function make_template(mesh)
     return template
 end
 
-function new_make_template(mesh)
+function make_level4_template(mesh)
     pairs = make_edge_pairs(mesh)
     x = reshape(mesh.connectivity, 1, :)
 
@@ -262,7 +258,6 @@ function reindex_game_env!(env)
     vertex_buffer_size = vertex_buffer(env.mesh)
     env.desired_degree = reindexed_desired_degree(env.desired_degree, new_vertex_indices, vertex_buffer_size)
     env.vertex_score = env.mesh.degree - env.desired_degree
-    env.template = make_template(env.mesh)
 end
 
 function active_vertex_desired_degree(env)
