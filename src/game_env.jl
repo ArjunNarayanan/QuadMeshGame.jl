@@ -95,32 +95,42 @@ function update_env_after_action(env)
 end
 
 function step_left_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
+    success = false
     if is_valid_left_flip(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
         left_flip!(env.mesh, quad, edge, maxdegree)
         update_env_after_action(env)
         env.reward = old_score - env.current_score
+        success = true
     else
         env.reward = no_action_reward
     end
     env.num_actions += 1
     env.is_terminated = check_terminated(env)
+
+    return success
 end
 
 function step_right_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
+    success = false
     if is_valid_right_flip(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
         right_flip!(env.mesh, quad, edge, maxdegree)
         update_env_after_action(env)
         env.reward = old_score - env.current_score
+        success = true
     else
         env.reward = no_action_reward
     end
     env.num_actions += 1
     env.is_terminated = check_terminated(env)
+
+    return success
 end
 
 function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vertex_desired_degree = 4)
+    success = false
+
     if is_valid_split(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
 
@@ -132,14 +142,18 @@ function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vert
 
         update_env_after_action(env)
         env.reward = old_score - env.current_score
+        success = true
     else
         env.reward = no_action_reward
     end
     env.num_actions += 1
     env.is_terminated = check_terminated(env)
+
+    return success
 end
 
 function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
+    success = false
     if is_valid_collapse(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
         
@@ -158,17 +172,23 @@ function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
 
         update_env_after_action(env)
         env.reward = old_score - env.current_score
+
+        success = true
     else
         env.reward = no_action_reward
     end
     env.num_actions += 1
     env.is_terminated = check_terminated(env)
+
+    return success
 end
 
 function step_nothing!(env; reward = 0)
     env.num_actions += 1
     env.reward = reward
     env.is_terminated = check_terminated(env)
+
+    return true
 end
 
 function make_edge_pairs(mesh)
