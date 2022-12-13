@@ -12,7 +12,7 @@ mutable struct GameEnv
 end
 
 function check_terminated(num_actions, max_actions, current_score, opt_score)
-    return num_actions >= max_actions || current_score == opt_score
+    return num_actions >= max_actions || current_score <= opt_score
 end
 
 function check_terminated(env)
