@@ -253,13 +253,16 @@ function is_active_vertex(mesh::QuadMesh, vertex)
 end
 
 function has_neighbor(mesh::QuadMesh, quad, edge)
+    @assert is_active_quad(mesh, quad)
+
     nbr_qidx = mesh.q2q[edge, quad]
+    nbr_twin = mesh.e2e[edge, quad]
     if nbr_qidx == 0
-        return false
-    elseif !is_active_quad(mesh, nbr_qidx)
-        @warn "Quad $quad referencing inactive quad $nbr_qidx across edge $edge"
+        @assert nbr_twin == 0
         return false
     else
+        @assert nbr_twin != 0
+        @assert is_active_quad(mesh, nbr_qidx)
         return true
     end
 end
@@ -314,14 +317,17 @@ function active_vertex_degrees(mesh)
 end
 
 function neighbor(mesh::QuadMesh, quad, edge)
+    @assert is_active_quad(mesh, quad)
     return mesh.q2q[edge, quad]
 end
 
 function twin(mesh::QuadMesh, quad, edge)
+    @assert is_active_quad(mesh, quad)
     return mesh.e2e[edge, quad]
 end
 
 function vertex_on_boundary(mesh::QuadMesh, idx)
+    @assert is_active_vertex(mesh, idx)
     return mesh.vertex_on_boundary[idx]
 end
 
@@ -442,6 +448,7 @@ function delete_quad!(mesh::QuadMesh, idx)
 end
 
 function replace_index_in_vertex_connectivity!(mesh, old_vertex_idx, new_vertex_idx)
+    @assert all(mesh.active_vertex[new_vertex_idx])
     mesh.connectivity[mesh.connectivity.==old_vertex_idx] .= new_vertex_idx
 end
 
