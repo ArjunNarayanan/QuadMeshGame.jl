@@ -89,7 +89,7 @@ function active_vertex_scores(env)
     return env.vertex_score[env.mesh.active_vertex]
 end
 
-function update_env_after_action(env)
+function update_env_after_action!(env)
     env.vertex_score = env.mesh.degree - env.desired_degree
     env.current_score = sum(abs.(env.vertex_score))
 end
@@ -98,8 +98,9 @@ function step_left_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
     success = false
     if is_valid_left_flip(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
-        left_flip!(env.mesh, quad, edge, maxdegree)
-        update_env_after_action(env)
+        @assert left_flip!(env.mesh, quad, edge, maxdegree)
+
+        update_env_after_action!(env)
         env.reward = old_score - env.current_score
         success = true
     else
@@ -115,8 +116,9 @@ function step_right_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
     success = false
     if is_valid_right_flip(env.mesh, quad, edge, maxdegree)
         old_score = env.current_score
-        right_flip!(env.mesh, quad, edge, maxdegree)
-        update_env_after_action(env)
+        @assert right_flip!(env.mesh, quad, edge, maxdegree)
+
+        update_env_after_action!(env)
         env.reward = old_score - env.current_score
         success = true
     else
@@ -128,6 +130,14 @@ function step_right_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
     return success
 end
 
+function synchronize_desired_degree_size!(env)
+    vertex_buffer_size = vertex_buffer(env.mesh)
+    if vertex_buffer_size > length(env.desired_degree)
+        num_new_vertices = vertex_buffer_size - length(env.desired_degree)
+        env.desired_degree = zero_pad_vector(env.desired_degree, num_new_vertices)
+    end
+end
+
 function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vertex_desired_degree = 4)
     success = false
 
@@ -136,11 +146,49 @@ function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vert
 
         new_vertex_idx = env.mesh.new_vertex_pointer
 
-        split!(env.mesh, quad, edge, maxdegree)
+        @assert split!(env.mesh, quad, edge, maxdegree)
+        synchronize_desired_degree_size!(env)
+
         # set the desired degree of the new vertex
         env.desired_degree[new_vertex_idx] = new_vertex_desired_degree
 
-        update_env_after_action(env)
+        update_env_after_action!(env)
+        env.reward = old_score - env.current_score
+        success = true
+    else
+        env.reward = no_action_reward
+    end
+    env.num_actions += 1
+    env.is_terminated = check_terminated(env)
+
+    return success
+end
+
+function update_desired_degree_of_new_vertices!(env, vertex_ids, boundary_degree, interior_degree)
+    for vid in vertex_ids
+        if vertex_on_boundary(env.mesh, vid)
+            env.desired_degree[vid] = boundary_degree
+        else
+            env.desired_degree[vid] = interior_degree
+        end
+    end
+end
+
+function step_global_split!(env, quad_idx, half_edge_idx; maxdegree = 7, no_action_reward = -4,
+    new_boundary_vertex_desired_degree = 3, new_interior_vertex_desired_degree = 4)
+
+    success = false
+    if is_valid_global_split(mesh, quad_idx, half_edge_idx, maxdegree)
+        old_score = env.current_score
+
+        tracker = Tracker()
+        @assert global_split!(mesh, quad_idx, half_edge_idx, tracker, maxdegree)
+        synchronize_desired_degree_size!(env)
+
+        update_desired_degree_of_new_vertices!(env, tracker.new_vertex_ids, new_boundary_vertex_desired_degree,
+        new_interior_vertex_desired_degree)
+
+        update_env_after_action!(env)
         env.reward = old_score - env.current_score
         success = true
     else
@@ -161,7 +209,7 @@ function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
         collapsed_vertex = env.mesh.connectivity[next(next(edge)), quad]
         opp_ver_on_boundary = vertex_on_boundary(env.mesh, collapsed_vertex)
         
-        collapse!(env.mesh, quad, edge, maxdegree)
+        @assert collapse!(env.mesh, quad, edge, maxdegree)
         
         # if collapsed vertex on boundary, set that as the desired degree of current vertex
         if opp_ver_on_boundary
@@ -170,7 +218,7 @@ function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
         # set the desired degree of collapsed vertex to zero
         env.desired_degree[collapsed_vertex] = 0
 
-        update_env_after_action(env)
+        update_env_after_action!(env)
         env.reward = old_score - env.current_score
 
         success = true
@@ -220,20 +268,16 @@ function cycle_edges(x)
     return x
 end
 
-function zero_pad(m)
-    return [m zeros(Int, size(m, 1))]
-end
-
 function make_level3_template(mesh)
     pairs = make_edge_pairs(mesh)
     x = reshape(mesh.connectivity, 1, :)
 
     cx = cycle_edges(x)
 
-    pcx = zero_pad(cx)[:, pairs][3:end, :]
+    pcx = zero_pad_matrix_cols(cx, 1)[:, pairs][3:end, :]
     cpcx = cycle_edges(pcx)
 
-    pcpcx = zero_pad(cpcx)[:, pairs][3:end, :]
+    pcpcx = zero_pad_matrix_cols(cpcx, 1)[:, pairs][3:end, :]
     cpcpcx = cycle_edges(pcpcx)
 
     template = vcat(cx, cpcx, cpcpcx)
@@ -247,13 +291,13 @@ function make_level4_template(mesh)
 
     cx = cycle_edges(x)
 
-    pcx = zero_pad(cx)[:, pairs][3:end, :]
+    pcx = zero_pad_matrix_cols(cx, 1)[:, pairs][3:end, :]
     cpcx = cycle_edges(pcx)
 
-    pcpcx = zero_pad(cpcx)[:, pairs][3:end, :]
+    pcpcx = zero_pad_matrix_cols(cpcx, 1)[:, pairs][3:end, :]
     cpcpcx = cycle_edges(pcpcx)
 
-    pcpcpcx = zero_pad(cpcpcx)[:, pairs][7:end, :]
+    pcpcpcx = zero_pad_matrix_cols(cpcpcx, 1)[:, pairs][7:end, :]
     cpcpcpcx = cycle_edges(pcpcpcx)
 
     template = vcat(cx, cpcx, cpcpcx, cpcpcpcx)

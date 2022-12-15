@@ -480,11 +480,11 @@ function vertex_degrees(edges, num_vertices)
     return degrees
 end
 
-function zero_pad(matrix, total_size)
+function resize_and_zero_pad_matrix(matrix, total_size)
     numrows, numcols = size(matrix)
     @assert numcols <= total_size
-    extra = total_size - numcols
-    return hcat(matrix, zeros(eltype(matrix), numrows, extra))
+    num_new_cols = total_size - numcols
+    return zero_pad_matrix_cols(matrix, num_new_cols)
 end
 
 function reindex_quads!(mesh::QuadMesh)
@@ -495,10 +495,10 @@ function reindex_quads!(mesh::QuadMesh)
     
     new_q2q = active_quad_q2q(mesh)
     new_q2q = [q > 0 ? new_quad_indices[q] : 0 for q in new_q2q]
-    mesh.q2q = zero_pad(new_q2q, quad_buffer_size)
+    mesh.q2q = resize_and_zero_pad_matrix(new_q2q, quad_buffer_size)
 
-    mesh.connectivity = zero_pad(active_quad_connectivity(mesh), quad_buffer_size)
-    mesh.e2e = zero_pad(active_quad_e2e(mesh), quad_buffer_size)
+    mesh.connectivity = resize_and_zero_pad_matrix(active_quad_connectivity(mesh), quad_buffer_size)
+    mesh.e2e = resize_and_zero_pad_matrix(active_quad_e2e(mesh), quad_buffer_size)
 
     mesh.active_quad = falses(quad_buffer_size)
     mesh.active_quad[1:num_quads] .= true
@@ -513,7 +513,7 @@ function reindex_vertices!(mesh::QuadMesh)
     active_vertices = mesh.active_vertex
     new_vertex_indices[active_vertices] .= 1:num_vertices
     
-    mesh.vertices = zero_pad(active_vertex_coordinates(mesh), vertex_buffer_size)
+    mesh.vertices = resize_and_zero_pad_matrix(active_vertex_coordinates(mesh), vertex_buffer_size)
 
     active_conn = active_quad_connectivity(mesh)
     new_conn = [new_vertex_indices[v] for v in active_conn]

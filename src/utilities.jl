@@ -53,3 +53,22 @@ function desired_degree(angle; target_angle = 90)
     end
     return n
 end
+
+function pad_vector(vec, num_new_entries, value)
+    return [vec; fill(value, num_new_entries)]
+end
+
+function zero_pad_vector(vec, num_new_entries)
+    T = eltype(vec)
+    return pad_vector(vec, num_new_entries, zero(T))
+end
+
+function pad_matrix_cols(mat, num_new_cols, value)
+    nr, _ = size(mat)
+    return [mat fill(value, (nr, num_new_cols))]
+end
+
+function zero_pad_matrix_cols(m, num_new_cols)
+    T = eltype(m)
+    return pad_matrix_cols(m, num_new_cols, zero(T))
+end
