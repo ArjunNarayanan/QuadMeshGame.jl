@@ -184,3 +184,18 @@ on_boundary = trues(8)
 # need at least one vertex in interior for collapse
 @test !QM.is_valid_collapse(mesh, 4, 1, 7)
 ############################################################################################################
+
+
+############################################################################################################
+mesh = QM.square_mesh(2)
+d0 = QM.active_vertex_degrees(mesh)
+env = QM.GameEnv(mesh, d0, 5)
+
+@test QM.step_global_split!(env, 2, 1)
+d0 = [2,3,2,3,4,3,2,3,2,4,4,3,3]
+@test allequal(QM.active_vertex_desired_degree(env), d0)
+vs = [0,1,0,0,-1,0,0,0,0,0,0,0,0]
+@test allequal(QM.active_vertex_score(env), vs)
+@test env.current_score == 2
+@test env.opt_score == 0
+@test env.reward == -2
