@@ -251,3 +251,46 @@ test_e2e = [0 0 0 2 3 3 3
 
 test_degrees = [2, 2, 3, 3, 3, 3, 2, 2, 4, 2, 4, 3, 4, 3]
 @test allequal(QM.active_vertex_degrees(mesh), test_degrees)
+
+
+
+
+######################################################################################################
+# Handling degree 3 vertices 
+
+vertices = [0. 0. 0. 1. 1. 1. 1.5 2. 2. 2.5
+            0. 1. 2. 0. 1. 2. 1. 0. 2. 1.]
+connectivity = [1 4 5 2
+                2 5 6 3
+                4 8 7 5
+                5 7 9 6
+                7 8 10 9]
+mesh = QM.QuadMesh(vertices, connectivity')
+
+tracker = QM.Tracker()
+@test QM.global_split!(mesh, 2, 1, tracker)
+
+@test QM.number_of_vertices(mesh) == 17
+@test QM.number_of_quads(mesh) == 11
+
+connectivity = [1 2 12 11 13 11 13 16 15 16 17
+                4 11 15 13 16 2 11 13 12 15 16
+                12 6 7 9 17 12 5 7 4 8 14
+                2 3 5 6 9 5 7 15 8 14 10]
+@test allequal(connectivity, QM.active_quad_connectivity(mesh))
+
+q2q = [0 6 9 7 8 2 4 5 3 8 5
+       9 4 8 5 11 1 6 7 1 9 10
+       6 0 7 0 0 3 3 3 0 0 0
+       0 0 6 2 4 7 8 10 10 11 0]
+@test allequal(q2q, QM.active_quad_q2q(mesh))
+
+e2e = [0 1 1 1 1 1 1 1 1 4 2
+       2 4 3 4 1 3 4 4 2 4 4
+       2 0 3 0 0 4 3 2 0 0 0
+       0 0 3 2 2 2 2 1 2 2 0]
+@test allequal(e2e, QM.active_quad_e2e(mesh))
+
+
+@test allequal(tracker.new_vertex_ids, [11, 12, 13, 14, 15, 16, 17])
+@test allequal(tracker.on_boundary, [false, false, false, true, false, false, true])

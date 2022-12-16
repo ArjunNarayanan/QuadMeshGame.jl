@@ -132,6 +132,8 @@ function global_split_quads_along_path!(mesh, quad_idx, half_edge_idx, tracker)
 end
 
 function global_split!(mesh, quad_idx, half_edge_idx, tracker, maxdegree = 7)
+    @warn "This is experimental, don't trust your results"
+    
     if !is_valid_global_split(mesh, quad_idx, half_edge_idx, maxdegree)
         return false
     end
