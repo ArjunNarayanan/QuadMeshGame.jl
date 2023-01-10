@@ -294,3 +294,31 @@ e2e = [0 1 1 1 1 1 1 1 1 4 2
 
 @test allequal(tracker.new_vertex_ids, [11, 12, 13, 14, 15, 16, 17])
 @test allequal(tracker.on_boundary, [false, false, false, true, false, false, true])
+
+
+######################################################################################################
+# Check loop formation
+vertices = [0. 0. 0. 1. 1. 1. 1.5 2. 2. 2.5
+            0. 1. 2. 0. 1. 2. 1. 0. 2. 1.]
+connectivity = [1 4 5 2
+                2 5 6 3
+                4 8 7 5
+                5 7 9 6
+                7 8 10 9]
+mesh = QM.QuadMesh(vertices, connectivity')
+
+@test !QM.check_loop_in_next_step(mesh, 2, 1, 1, 3)
+
+vertices = [0. 0. 0. 1. 1. 1. 2. 3.
+            0. 1. 2. 0. 1. 2. 1. 1.]
+connectivity = [1 4 5 2
+                2 5 6 3
+                4 8 7 5
+                5 7 8 6]
+mesh = QM.QuadMesh(vertices, connectivity')
+@test !QM.check_loop_in_next_step(mesh, 2, 1, 1, 3)
+
+tracker = QM.Tracker()
+QM.insert_initial_quad_for_global_split!(mesh, 2, 1, tracker)
+QM.split_neighboring_quad_along_path!(mesh, 4, 1, tracker)
+@test QM.check_loop_in_next_step(mesh, 4, 1, 1, 3)
