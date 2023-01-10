@@ -173,7 +173,23 @@ end
 
 function is_valid_path_split(mesh, quad_idx, half_edge_idx)
     @assert is_active_quad(mesh, quad_idx)
-    return has_neighbor(mesh, quad_idx, next(half_edge_idx))
+    if !has_neighbor(mesh, quad_idx, next(half_edge_idx))
+        return false
+    end
+
+    oq, ot = neighbor(mesh, quad_idx, half_edge_idx), twin(mesh, quad_idx, half_edge_idx)
+    nq, nt = neighbor(mesh, quad_idx, next(half_edge_idx)), twin(mesh, quad_idx, next(half_edge_idx))
+    noq, not = neighbor(mesh, oq, previous(ot)), twin(mesh, oq, previous(ot))
+
+    if noq == nq && not == nt
+        onq, ont = neighbor(mesh, nq, nt), twin(mesh, nq, nt)
+        @assert (onq == quad_idx && ont == next(half_edge_idx)) || (onq == oq && ont == previous(ot))
+        
+        return true
+    else
+        return false
+    end
+
 end
 
 function global_split_quads_along_path!(mesh, quad_idx, half_edge_idx, tracker)

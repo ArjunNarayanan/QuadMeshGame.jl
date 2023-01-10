@@ -1,4 +1,4 @@
-# using Revise
+using Revise
 using Test
 using QuadMeshGame
 include("useful_routines.jl")
@@ -45,7 +45,7 @@ test_degrees = [2, 4, 2, 3, 3, 3, 2, 3, 2, 4, 4]
 
 
 
-
+@test QM.is_valid_path_split(mesh, 2, 1)
 QM.split_neighboring_quad_along_path!(mesh, 2, 1, tracker)
 @test QM.number_of_vertices(mesh) == 12
 @test QM.number_of_quads(mesh) == 6
@@ -84,6 +84,8 @@ test_e2e = [0 4 2 0
 test_degrees = [2, 4, 2, 3, 3, 3, 2, 3, 2, 4, 4, 3]
 @test allequal(QM.active_vertex_degrees(mesh), test_degrees)
 
+
+@test QM.is_valid_path_split(mesh, 5, 2)
 QM.split_neighboring_quad_along_path!(mesh, 5, 2, tracker)
 @test QM.number_of_vertices(mesh) == 13
 @test QM.number_of_quads(mesh) == 7
@@ -320,5 +322,14 @@ mesh = QM.QuadMesh(vertices, connectivity')
 
 tracker = QM.Tracker()
 QM.insert_initial_quad_for_global_split!(mesh, 2, 1, tracker)
-QM.split_neighboring_quad_along_path!(mesh, 4, 1, tracker)
+
+oq, ot = QM.neighbor(mesh, 2, 1), QM.twin(mesh, 2, 1)
+nq, nt = QM.neighbor(mesh, 2, QM.next(1)), QM.twin(mesh, 2, QM.next(1))
+noq, not = QM.neighbor(mesh, oq, QM.previous(ot)), QM.neighbor(mesh, oq, QM.previous(ot))
+noq == nq && not == nt
+nnq, nnt = QM.neighbor(mesh, nq, nt), QM.twin(mesh, nq, nt)
+@assert nnq == 2 && nnt == QM.next(1)
+
+QM.is_valid_path_split(mesh, 2, 1)
+QM.split_neighboring_quad_along_path!(mesh, 2, 1, tracker)
 @test QM.check_loop_in_next_step(mesh, 4, 1, 1, 3)
