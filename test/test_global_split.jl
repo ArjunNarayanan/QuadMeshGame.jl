@@ -1,4 +1,4 @@
-using Revise
+# using Revise
 using Test
 using QuadMeshGame
 include("useful_routines.jl")
@@ -321,15 +321,121 @@ mesh = QM.QuadMesh(vertices, connectivity')
 @test !QM.check_loop_in_next_step(mesh, 2, 1, 1, 3)
 
 tracker = QM.Tracker()
-QM.insert_initial_quad_for_global_split!(mesh, 2, 1, tracker)
+new_quad_idx = QM.insert_initial_quad_for_global_split!(mesh, 2, 1, tracker)
+@test new_quad_idx == 5
 
-oq, ot = QM.neighbor(mesh, 2, 1), QM.twin(mesh, 2, 1)
-nq, nt = QM.neighbor(mesh, 2, QM.next(1)), QM.twin(mesh, 2, QM.next(1))
-noq, not = QM.neighbor(mesh, oq, QM.previous(ot)), QM.neighbor(mesh, oq, QM.previous(ot))
-noq == nq && not == nt
-nnq, nnt = QM.neighbor(mesh, nq, nt), QM.twin(mesh, nq, nt)
-@assert nnq == 2 && nnt == QM.next(1)
-
-QM.is_valid_path_split(mesh, 2, 1)
+@test QM.is_valid_path_split(mesh, 2, 1)
 QM.split_neighboring_quad_along_path!(mesh, 2, 1, tracker)
+
 @test QM.check_loop_in_next_step(mesh, 4, 1, 1, 3)
+QM.close_loop_for_global_split!(mesh, 4, 1, 1, 3)
+@test QM.number_of_quads(mesh) == 7
+@test QM.number_of_vertices(mesh) == 11
+
+connectivity = [1 4 10 2
+                2 9 6 3
+                4 8 11 10
+                9 11 8 6
+                9 2 10 5
+                11 9 5 7
+                10 11 7 5]
+@test allequal(QM.active_quad_connectivity(mesh), connectivity')
+
+q2q = [0 3 5 0
+       5 4 0 0
+       0 4 7 1
+       6 3 0 2
+       2 1 7 6
+       4 5 7 7
+       3 6 6 5]
+@test allequal(QM.active_quad_q2q(mesh), q2q')
+
+e2e = [0 4 2 0
+       1 4 0 0
+       0 2 1 2
+       1 2 0 2
+       1 3 4 2
+       1 4 3 2
+       3 4 3 3]
+@test allequal(QM.active_quad_e2e(mesh), e2e')
+######################################################################################################
+
+
+
+
+######################################################################################################
+# BIGGER EXAMPLE OF LOOP FORMATION
+
+vertices = [0. 0. 0. 1. 1. 1. 2. 2. 2. 3. 4.
+            0. 1. 2. 0. 1. 2. 0. 1. 2. 1. 1.]
+connectivity = [1 4 5 2
+                2 5 6 3
+                4 7 8 5
+                5 8 9 6
+                7 11 10 8
+                8 10 11 9]
+mesh = QM.QuadMesh(vertices, connectivity')
+
+tracker = QM.Tracker()
+new_quad_idx = QM.insert_initial_quad_for_global_split!(mesh, 2, 1, tracker)
+@test new_quad_idx == 7
+
+@test !QM.check_loop_in_next_step(mesh, 2, 1, 1, 3)
+@test QM.is_valid_path_split(mesh, 2, 1)
+QM.split_neighboring_quad_along_path!(mesh, 2, 1, tracker)
+
+@test !QM.check_loop_in_next_step(mesh, 4, 1, 1, 3)
+@test QM.is_valid_path_split(mesh, 4, 1)
+QM.split_neighboring_quad_along_path!(mesh, 4, 1, tracker)
+
+@test !QM.check_loop_in_next_step(mesh, 6, 1, 1, 3)
+@test QM.is_valid_path_split(mesh, 6, 1)
+QM.split_neighboring_quad_along_path!(mesh, 6, 1, tracker)
+
+@test QM.check_loop_in_next_step(mesh, 5, 3, 1, 3)
+QM.close_loop_for_global_split!(mesh, 5, 3, 1, 3)
+
+@test QM.number_of_quads(mesh) == 11
+@test QM.number_of_vertices(mesh) == 16
+
+connectivity = [1 4 13 2
+                2 12 6 3
+                4 7 16 13
+                12 14 9 6
+                7 11 15 16
+                14 15 11 9
+                12 2 13 5
+                14 12 5 8
+                15 14 8 10
+                16 15 10 8
+                13 16 8 5]
+@test allequal(QM.active_quad_connectivity(mesh), connectivity')
+
+q2q = [0 3 7 0
+       7 4 0 0
+       0 5 11 1
+       8 6 0 2
+       0 6 10 3
+       9 5 0 4
+       2 1 11 8
+       4 7 11 9
+       6 8 10 10
+       5 9 9 11
+       3 10 8 7]
+@test allequal(QM.active_quad_q2q(mesh), q2q')
+
+e2e = [0 4 2 0
+       1 4 0 0
+       0 4 1 2
+       1 4 0 2
+       0 2 1 2
+       1 2 0 2
+       1 3 4 2
+       1 4 3 2
+       1 4 3 2
+       3 4 3 2
+       3 4 3 3]
+@test allequal(QM.active_quad_e2e(mesh), e2e')
+
+@test allequal(tracker.new_vertex_ids, [12, 13, 14, 15, 16])
+@test allequal(tracker.on_boundary, falses(5))

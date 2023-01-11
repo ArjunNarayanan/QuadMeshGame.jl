@@ -8,6 +8,13 @@ struct Tracker
     end
 end
 
+function Base.show(io::IO, tracker::Tracker)
+    num_new_verts = length(tracker.new_vertex_ids)
+    @assert length(tracker.on_boundary) == num_new_verts
+    println(io, "Tracker")
+    println(io, "\t$num_new_verts vertices")
+end
+
 function update_tracker!(tracker, vertex_id, on_boundary)
     push!(tracker.new_vertex_ids, vertex_id)
     push!(tracker.on_boundary, on_boundary)
@@ -42,6 +49,10 @@ function check_loop_in_next_step(mesh, quad, half_edge, target_quad, target_half
     end
 
     return false
+end
+
+function check_finite_global_split_length(mesh, quad, half_edge, maxsteps)
+    
 end
 
 function is_valid_global_split(mesh, quad_idx, half_edge_idx, maxdegree)
@@ -147,28 +158,47 @@ function split_neighboring_quad_along_path!(mesh, quad_idx, half_edge_idx, track
 end
 
 function close_loop_for_global_split!(mesh, quad_idx, half_edge_idx, target_quad, target_half_edge)
-    check_loop_in_next_step(mesh, quad_idx, half_edge_idx, target_quad, target_half_edge)
+    @assert check_loop_in_next_step(mesh, quad_idx, half_edge_idx, target_quad, target_half_edge)
     
     l1, l2, l3, l4 = next_cyclic_vertices(half_edge_idx)
     v1, v2, v3, v4 = (vertex(mesh, quad_idx, l) for l in (l1, l2, l3, l4))
 
     @assert has_neighbor(mesh, quad_idx, l2)
     nbr_quad, nbr_twin = neighbor(mesh, quad_idx, l2), twin(mesh, quad_idx, l2)
+    set_neighbor!(mesh, nbr_quad, nbr_twin, quad_idx)
+    set_twin!(mesh, nbr_quad, nbr_twin, l2)
+
     nl1, nl2, nl3, nl4 = next_cyclic_vertices(nbr_twin)
+    nv1, nv2, nv3, nv4 = (vertex(mesh, nbr_quad, l) for l in (nl1, nl2, nl3, nl4))
 
     tl1, tl2, tl3, tl4 = next_cyclic_vertices(target_half_edge)
     tv1, tv2, tv3, tv4 = (vertex(mesh, target_quad, l) for l in (tl1, tl2, tl3, tl4))
     
-    set_vertex!(mesh, nbr_quad, nl2, v2)
-    set_vertex!(mesh, nbr_quad, l3, vertex(mesh, target_quad, target_half_edge))
-
     opp_quad, opp_twin = neighbor(mesh, quad_idx, l1), twin(mesh, quad_idx, l1)
     ol1, ol2, ol3, ol4 = next_cyclic_vertices(opp_twin)
     ov1, ov2, ov3, ov4 = (vertex(mesh, opp_quad, l) for l in (ol1, ol2, ol3, ol4))
 
-    nv1, nv2, nv3, nv4 = v2, ov4, ov3, tv1
+    opp_target_quad, opp_target_twin = neighbor(mesh, target_quad, target_half_edge), 
+                                        twin(mesh, target_quad, target_half_edge)
 
-    error("Incomplete")
+    newv1, newv2, newv3, newv4 = tv1, v2, ov4, nv3
+    newq1, newq2, newq3, newq4 = nbr_quad, opp_quad, neighbor(mesh, nbr_quad, nl2), neighbor(mesh, target_quad, tl1)
+    newl1, newl2, newl3, newl4 = nl2, ol4, twin(mesh, nbr_quad, nl2), next(twin(mesh, target_quad, tl1))
+    new_quad_idx = insert_quad!(mesh, (newv1, newv2, newv3, newv4), 
+                                      (newq1, newq2, newq3, newq4), 
+                                      (newl1, newl2, newl3, newl4))
+
+    set_vertex!(mesh, nbr_quad, nl2, v2)
+    set_vertex!(mesh, nbr_quad, nl3, tv1)
+
+    for (q, l) in zip((newq1, newq2, newq3, newq4), (newl1, newl2, newl3, newl4))
+        set_neighbor_if_not_boundary!(mesh, q, l, new_quad_idx)
+    end
+
+    for (q, l, idx) in zip((newq1, newq2, newq3, newq4), (newl1, newl2, newl3, newl4), (1, 2, 3, 4))
+        set_twin_if_not_boundary!(mesh, q, l, idx)
+    end
+
 end
 
 function is_valid_path_split(mesh, quad_idx, half_edge_idx)
@@ -184,7 +214,7 @@ function is_valid_path_split(mesh, quad_idx, half_edge_idx)
     if noq == nq && not == nt
         onq, ont = neighbor(mesh, nq, nt), twin(mesh, nq, nt)
         @assert (onq == quad_idx && ont == next(half_edge_idx)) || (onq == oq && ont == previous(ot))
-        
+
         return true
     else
         return false
