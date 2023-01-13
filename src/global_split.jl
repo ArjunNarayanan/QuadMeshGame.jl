@@ -20,11 +20,19 @@ function update_tracker!(tracker, vertex_id, on_boundary)
     push!(tracker.on_boundary, on_boundary)
 end
 
-function advance_along_global_split_path(mesh, quad, half_edge)
+function step_forward_global_split_path(mesh, quad, half_edge)
     @assert has_neighbor(mesh, quad, next(half_edge))
     
     next_quad = neighbor(mesh, quad, next(half_edge))
     next_half_edge = next(twin(mesh, quad, next(half_edge)))
+    return next_quad, next_half_edge
+end
+
+function step_reverse_global_split_path(mesh, quad, half_edge)
+    @assert has_neighbor(mesh, quad, previous(half_edge))
+
+    next_quad = neighbor(mesh, quad, previous(half_edge))
+    next_half_edge = previous(twin(mesh, quad, previous(half_edge)))
     return next_quad, next_half_edge
 end
 
@@ -51,28 +59,99 @@ function check_loop_in_next_step(mesh, quad, half_edge, target_quad, target_half
     return false
 end
 
-function check_finite_global_split_length(mesh, quad, half_edge, maxsteps)
-    
+function global_split_forward_path_terminates(mesh, quad, half_edge, target_quad, target_half_edge, maxsteps)
+    numsteps = 1
+    terminates = false
+    loops = false
+
+    while numsteps <= maxsteps
+        numsteps += 1
+
+        if quad == target_quad && half_edge == target_half_edge
+            terminates = true
+            loops = true
+            break
+        end
+
+        if !has_neighbor(mesh, quad, next(half_edge))
+            terminates = true
+            loops = false
+            break
+        end
+
+        quad, half_edge = step_forward_global_split_path(mesh, quad, half_edge)
+    end
+
+    if loops 
+        @assert terminates 
+    end
+
+    return terminates, loops
 end
 
-function is_valid_global_split(mesh, quad_idx, half_edge_idx, maxdegree)
+function global_split_reverse_path_terminates(mesh, quad, half_edge, target_quad, target_half_edge, maxsteps)
+    numsteps = 1
+    terminates = false
+    loops = false
+
+    while numsteps <= maxsteps
+        numsteps += 1
+
+        if quad == target_quad && half_edge == target_half_edge
+            terminates = true
+            loops = true
+            break
+        end
+
+        if !has_neighbor(mesh, quad, previous(half_edge))
+            terminates = true
+            loops = false
+            break
+        end
+
+        quad, half_edge = step_reverse_global_split_path(mesh, quad, half_edge)
+    end
+
+    if loops 
+        @assert terminates 
+    end
+
+    return terminates, loops
+end
+
+
+function check_finite_global_split_length(mesh, quad, half_edge, maxsteps)
+    @assert has_neighbor(mesh, quad, half_edge)
+
+    target_quad, target_half_edge = neighbor(mesh, quad, half_edge), twin(mesh, quad, half_edge)
+
+    forward_terminates, loops = global_split_forward_path_terminates(mesh, quad, half_edge, target_quad, target_half_edge, maxsteps)
+    if !forward_terminates
+        return false
+    end
+
+    if loops
+        return true
+    end
+
+    reverse_terminates, _ = global_split_reverse_path_terminates(mesh, target_quad, target_half_edge, quad, half_edge, maxsteps)
+
+    return reverse_terminates
+end
+
+function is_valid_global_split(mesh, quad_idx, half_edge_idx, maxsteps, maxdegree)
     if !is_active_quad(mesh, quad_idx) || !has_neighbor(mesh, quad_idx, half_edge_idx)
         return false
     end
 
-    v1, v2 = vertex(mesh, quad_idx, half_edge_idx), vertex(mesh, quad_idx, next(half_edge_idx))
-    
     # degree of v1 increases by 1 so if it is at maxdegree, return false
+    v1 = vertex(mesh, quad_idx, half_edge_idx)
     if degree(mesh, v1) >= maxdegree 
         return false
     end
 
-    # degree of v2 must be at least 4
-    if !vertex_on_boundary(mesh, v2) && degree(mesh, v2) < 4
-        return false
-    end
-
-    if vertex_on_boundary(mesh, v2) && degree(mesh, v2) < 3
+    terminates = check_finite_global_split_length(mesh, quad_idx, half_edge_idx, maxsteps)
+    if !terminates
         return false
     end
 
@@ -233,10 +312,14 @@ function global_split_quads_along_path!(mesh, quad_idx, half_edge_idx, tracker)
     end
 end
 
-function global_split!(mesh, quad_idx, half_edge_idx, tracker, maxdegree = 7)
+
+#=
+TO DO - NEED TO FIX THE CASE WHERE THE NODE BEING SPLIT IS DEGREE 3!
+=#
+function global_split!(mesh, quad_idx, half_edge_idx, tracker, maxsteps, maxdegree = 7)
     @warn "This is experimental, don't trust your results"
     
-    if !is_valid_global_split(mesh, quad_idx, half_edge_idx, maxdegree)
+    if !is_valid_global_split(mesh, quad_idx, half_edge_idx, maxsteps, maxdegree)
         return false
     end
 
