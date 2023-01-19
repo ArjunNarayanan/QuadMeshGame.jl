@@ -301,6 +301,8 @@ function is_valid_path_split(mesh, quad_idx, half_edge_idx)
 
 end
 
+
+
 function global_split_quads_along_path!(mesh, quad_idx, half_edge_idx, tracker)
     while is_valid_path_split(mesh, quad_idx, half_edge_idx)
         split_neighboring_quad_along_path!(mesh, quad_idx, half_edge_idx, tracker)
