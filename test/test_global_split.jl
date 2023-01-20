@@ -287,14 +287,14 @@ test_conn = [1 4 11 2
 @test allequal(QM.active_quad_connectivity(mesh), test_conn')
 test_q2q = [0 3 5 0
             5 4 0 0
-            0 0 4 1
-            3 0 0 2
+            0 0 4 5
+            3 0 0 5
             2 1 3 4]
 @test allequal(QM.active_quad_q2q(mesh), test_q2q')
 test_e2e = [0 4 2 0
             1 4 0 0
-            0 0 1 2
-            3 0 0 2
+            0 0 1 3
+            3 0 0 4
             1 3 4 4]
 @test allequal(QM.active_quad_e2e(mesh), test_e2e')
 @test allequal(tracker.new_vertex_ids, [10, 11])
@@ -323,7 +323,7 @@ test_conn = [1 4 11 2
 
 test_q2q = [0 3 5 0
             5 4 0 0
-            0 0 6 1
+            0 0 6 5
             6 0 0 2
             2 1 3 6
             4 5 3 0]
@@ -331,7 +331,7 @@ test_q2q = [0 3 5 0
 
 test_e2e = [0 4 2 0
             1 4 0 0
-            0 0 3 2
+            0 0 3 3
             1 0 0 2
             1 3 4 2
             1 4 3 0]
@@ -578,41 +578,38 @@ tracker = QM.Tracker()
 new_quad_idx = QM.insert_initial_quad_for_global_split!(mesh, 2, 1, tracker)
 @test new_quad_idx == 4
 
-mesh.q2q[1,3] = 4
-mesh.q2q[4,3] = 4
-mesh.e2e[1,3] = 3
-mesh.e2e[4,3] = 4
-
 @test QM.is_valid_path_split(mesh, 2, 1)
 QM.split_neighboring_quad_along_path!(mesh, 2, 1, tracker)
 
-# QM.is_valid_path_split(mesh, 4, 2)
+@test QM.is_valid_path_split(mesh, 4, 2)
 QM.split_neighboring_quad_along_path!(mesh, 4, 2, tracker)
 
 @test QM.is_valid_path_split(mesh, 5, 4)
 QM.split_neighboring_quad_along_path!(mesh, 5, 4, tracker)
 
+connectivity = [1 5 9 2
+                2 8 6 3
+                8 11 12 6
+                8 2 9 4
+                11 8 4 9
+                11 9 5 10
+                12 11 10 7]
+@test allequal(QM.active_quad_connectivity(mesh), connectivity')
 
+q2q = [0 6 4 0
+       4 3 0 0
+       5 7 0 2
+       2 1 5 5
+       3 4 4 6
+       5 1 0 7
+       3 6 0 0]
+@test allequal(QM.active_quad_q2q(mesh), q2q')
 
-######################################################################################################
-vertices = [0. 0. 0. 1. 1. 1. 1.5 2. 2. 2.5
-            0. 1. 2. 0. 1. 2. 1. 0. 2. 1.]
-connectivity = [1 4 5 2
-                2 5 6 3
-                4 8 7 5
-                5 7 9 6
-                7 8 10 9]
-mesh = QM.QuadMesh(vertices, connectivity')
-
-tracker = QM.Tracker()
-new_quad_idx = QM.insert_initial_quad_for_global_split!(mesh, 2, 1, tracker)
-
-@test QM.is_valid_path_split(mesh, 2, 1)
-QM.split_neighboring_quad_along_path!(mesh, 2, 1, tracker)
-
-@test QM.is_valid_path_split(mesh, 4, 1)
-QM.split_neighboring_quad_along_path!(mesh, 4, 1, tracker)
-
-@test QM.is_valid_path_split(mesh, 6, 2)
-QM.split_neighboring_quad_along_path!(mesh, 6, 2, tracker)
-
+e2e = [0 2 2 0
+       1 4 0 0
+       1 1 0 2
+       1 3 3 2
+       1 4 3 1
+       4 2 0 2
+       2 4 0 0]
+@test allequal(QM.active_quad_e2e(mesh), e2e')
