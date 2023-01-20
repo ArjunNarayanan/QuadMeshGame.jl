@@ -52,7 +52,10 @@ function check_loop_in_next_step(mesh, quad, half_edge, target_quad, target_half
         next_half_edge = h
     end
 
-    if next_quad == target_quad && next_half_edge == target_half_edge
+    q = neighbor(mesh, next_quad, next(next(next_half_edge)))
+    h = twin(mesh, next_quad, next(next(next_half_edge)))
+
+    if q == target_quad && h == target_half_edge
         return true
     end
 
@@ -186,12 +189,17 @@ function insert_initial_quad_for_global_split!(mesh, quad_idx, half_edge_idx, tr
     new_quad_idx = insert_quad!(mesh, (nv1, v1, nv2, v2), (nq1, nq2, nq3, nq4), (nl1, nl2, nl3, nl4))
 
     set_vertex!(mesh, quad_idx, l2, nv1)
-    set_neighbor!(mesh, quad_idx, l1, new_quad_idx)
-    set_twin!(mesh, quad_idx, l1, 1)
+    # set_neighbor!(mesh, quad_idx, l1, new_quad_idx)
+    # set_twin!(mesh, quad_idx, l1, 1)
 
     set_vertex!(mesh, opp_quad, ol1, nv2)
-    set_neighbor!(mesh, opp_quad, ol1, new_quad_idx)
-    set_twin!(mesh, opp_quad, ol1, 2)
+    # set_neighbor!(mesh, opp_quad, ol1, new_quad_idx)
+    # set_twin!(mesh, opp_quad, ol1, 2)
+
+    for (q, l, idx) in zip((nq1, nq2, nq3, nq4), (nl1, nl2, nl3, nl4), (1,2,3,4))
+        set_neighbor_if_not_boundary!(mesh, q, l, new_quad_idx)
+        set_twin_if_not_boundary!(mesh, q, l, idx)
+    end
 
     increment_degree!(mesh, v1)
     decrement_degree!(mesh, v2)
@@ -257,9 +265,6 @@ function close_loop_for_global_split!(mesh, quad_idx, half_edge_idx, target_quad
     ol1, ol2, ol3, ol4 = next_cyclic_vertices(opp_twin)
     ov1, ov2, ov3, ov4 = (vertex(mesh, opp_quad, l) for l in (ol1, ol2, ol3, ol4))
 
-    opp_target_quad, opp_target_twin = neighbor(mesh, target_quad, target_half_edge), 
-                                        twin(mesh, target_quad, target_half_edge)
-
     newv1, newv2, newv3, newv4 = tv1, v2, ov4, nv3
     newq1, newq2, newq3, newq4 = nbr_quad, opp_quad, neighbor(mesh, nbr_quad, nl2), neighbor(mesh, target_quad, tl1)
     newl1, newl2, newl3, newl4 = nl2, ol4, twin(mesh, nbr_quad, nl2), next(twin(mesh, target_quad, tl1))
@@ -278,27 +283,28 @@ function close_loop_for_global_split!(mesh, quad_idx, half_edge_idx, target_quad
         set_twin_if_not_boundary!(mesh, q, l, idx)
     end
 
+    set_neighbor!(mesh, nbr_quad, nl3, target_quad)
+    set_twin!(mesh, nbr_quad, nl3, tl4)
+
 end
 
 function is_valid_path_split(mesh, quad_idx, half_edge_idx)
     @assert is_active_quad(mesh, quad_idx)
-    if !has_neighbor(mesh, quad_idx, next(half_edge_idx))
+    
+    next_half_edge = next(half_edge_idx)
+    if !has_neighbor(mesh, quad_idx, next_half_edge)
         return false
     end
 
-    oq, ot = neighbor(mesh, quad_idx, half_edge_idx), twin(mesh, quad_idx, half_edge_idx)
-    nq, nt = neighbor(mesh, quad_idx, next(half_edge_idx)), twin(mesh, quad_idx, next(half_edge_idx))
-    noq, not = neighbor(mesh, oq, previous(ot)), twin(mesh, oq, previous(ot))
+    v1 = vertex(mesh, quad_idx, next_half_edge)
+    nq, nt = neighbor(mesh, quad_idx, next_half_edge), twin(mesh, quad_idx, next_half_edge)
+    v2 = vertex(mesh, nq, next(nt))
 
-    if noq == nq && not == nt
-        onq, ont = neighbor(mesh, nq, nt), twin(mesh, nq, nt)
-        @assert (onq == quad_idx && ont == next(half_edge_idx)) || (onq == oq && ont == previous(ot))
-
+    if v1 != v2
         return true
-    else
-        return false
     end
 
+    return false
 end
 
 function global_split_quads_along_path!(mesh, quad_idx, half_edge_idx, tracker)
