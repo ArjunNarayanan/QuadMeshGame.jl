@@ -174,11 +174,11 @@ function update_desired_degree_of_new_vertices!(env, vertex_ids, boundary_degree
     end
 end
 
-function step_global_split!(env, quad_idx, half_edge_idx; maxdegree = 7, no_action_reward = -4,
+function step_global_split!(env, quad_idx, half_edge_idx, maxsteps; maxdegree = 7, no_action_reward = -4,
     new_boundary_vertex_desired_degree = 3, new_interior_vertex_desired_degree = 4)
 
     success = false
-    if is_valid_global_split(env.mesh, quad_idx, half_edge_idx, maxdegree)
+    if is_valid_global_split(env.mesh, quad_idx, half_edge_idx, maxsteps, maxdegree)
         old_score = env.current_score
 
         tracker = Tracker()
