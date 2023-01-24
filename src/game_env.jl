@@ -182,7 +182,7 @@ function step_global_split!(env, quad_idx, half_edge_idx, maxsteps; maxdegree = 
         old_score = env.current_score
 
         tracker = Tracker()
-        @assert global_split!(env.mesh, quad_idx, half_edge_idx, tracker, maxdegree)
+        @assert global_split!(env.mesh, quad_idx, half_edge_idx, tracker, maxsteps, maxdegree)
         synchronize_desired_degree_size!(env)
 
         update_desired_degree_of_new_vertices!(env, tracker.new_vertex_ids, new_boundary_vertex_desired_degree,
