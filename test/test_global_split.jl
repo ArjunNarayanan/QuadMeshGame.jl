@@ -734,3 +734,29 @@ e2e = [0 4 2 0
 
 @test allequal(tracker.new_vertex_ids, [12, 13, 14, 15, 16])
 @test allequal(tracker.on_boundary, falses(5))
+######################################################################################################
+
+
+######################################################################################################
+# Another loop test
+# using PlotQuadMesh
+# PQ = PlotQuadMesh
+
+# vertices = [0. 0. 0. 1. 1. 1. 2. 2. 2. 2. 2.5 3.
+#             -1. 0. 1. -1. 0. 1. -1.5 -0.5 0.5 1.5 0. 0.]
+# connectivity = [1 4 5 2
+#                 2 5 6 3
+#                 4 7 8 5
+#                 5 9 10 6
+#                 5 8 11 9
+#                 12 11 8 7
+#                 9 11 12 10]
+
+# mesh = QM.QuadMesh(vertices, connectivity')
+# fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh))[1]
+
+# tracker = QM.Tracker()
+# @test QM.global_split!(mesh, 2, 1, tracker, 10)
+# fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh))[1]
+
+# QM.global_split!(mesh, 2, 1, tracker, 10)

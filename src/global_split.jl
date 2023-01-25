@@ -338,7 +338,8 @@ end
 
 
 function global_split!(mesh, quad_idx, half_edge_idx, tracker, maxsteps, maxdegree = 7)
-
+    @warn "This is experimental functionality"
+    
     if !is_valid_global_split(mesh, quad_idx, half_edge_idx, maxsteps, maxdegree)
         return false
     end
