@@ -2,112 +2,58 @@ mutable struct GameEnv
     mesh::Any
     desired_degree::Any
     vertex_score::Any
-    max_actions::Any
-    num_actions::Any
-    initial_score::Any
-    current_score::Any
-    opt_score::Any
-    reward::Any
-    is_terminated::Any
+    function GameEnv(mesh, desired_degree, vertex_score)
+        @assert length(desired_degree) == length(vertex_score)
+        return new(mesh, desired_degree, vertex_score)
+    end
 end
 
-function check_terminated(num_actions, max_actions, current_score, opt_score)
-    return num_actions >= max_actions || current_score <= opt_score
-end
 
-function check_terminated(env)
-    return check_terminated(
-        env.num_actions,
-        env.max_actions,
-        env.current_score,
-        env.opt_score,
-    )
-end
-
-function _is_initial_mesh(mesh)
-    nv = number_of_vertices(mesh)
-    nq = number_of_quads(mesh)
-    @assert all(mesh.active_vertex[1:nv])
-    @assert count(mesh.active_vertex) == nv
-    @assert all(mesh.active_quad[1:nq])
-    @assert count(mesh.active_quad) == nq
-end
-
-function GameEnv(mesh, d0, max_actions)
-    # _is_initial_mesh(mesh)
+function GameEnv(mesh, d0)
     @assert length(d0) == number_of_vertices(mesh)
-    @assert max_actions > 0
 
     nvb = vertex_buffer(mesh)
 
     exp_d0 = zeros(Int, nvb)
     exp_d0[mesh.active_vertex] .= d0
-
     vertex_score = mesh.degree - exp_d0
-
-    opt_score = abs(sum(vertex_score))
-    current_score = sum(abs.(vertex_score))
-    initial_score = current_score
-    reward = 0
-    num_actions = 0
-    is_terminated = check_terminated(num_actions, max_actions, current_score, opt_score)
 
     return GameEnv(
         mesh,
         exp_d0,
         vertex_score,
-        max_actions,
-        num_actions,
-        initial_score,
-        current_score,
-        opt_score,
-        reward,
-        is_terminated,
     )
 end
 
 function Base.show(io::IO, env::GameEnv)
     nv = number_of_vertices(env.mesh)
     nq = number_of_quads(env.mesh)
-    cs = env.current_score
-    os = env.opt_score
-    remaining_actions = env.max_actions - env.num_actions
-    term = env.is_terminated
-
+    
     println(io, "GameEnv")
     println(io, "\t$nv vertices")
     println(io, "\t$nq quads")
-    println(io, "\t$cs current score")
-    if term
-        println(io, "\tTERMINATED")
-    else
-        println(io, "\t$remaining_actions remaining actions")
-    end
 end
 
-function active_vertex_scores(env)
+function active_vertex_desired_degree(env)
+    return env.desired_degree[env.mesh.active_vertex]
+end
+
+function active_vertex_score(env)
     return env.vertex_score[env.mesh.active_vertex]
 end
 
 function update_env_after_action!(env)
     env.vertex_score = env.mesh.degree - env.desired_degree
-    env.current_score = sum(abs.(env.vertex_score))
 end
 
 function step_left_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
     success = false
     if is_valid_left_flip(env.mesh, quad, edge, maxdegree)
-        old_score = env.current_score
         @assert left_flip!(env.mesh, quad, edge, maxdegree)
 
         update_env_after_action!(env)
-        env.reward = old_score - env.current_score
         success = true
-    else
-        env.reward = no_action_reward
     end
-    env.num_actions += 1
-    env.is_terminated = check_terminated(env)
 
     return success
 end
@@ -115,17 +61,11 @@ end
 function step_right_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
     success = false
     if is_valid_right_flip(env.mesh, quad, edge, maxdegree)
-        old_score = env.current_score
         @assert right_flip!(env.mesh, quad, edge, maxdegree)
 
         update_env_after_action!(env)
-        env.reward = old_score - env.current_score
         success = true
-    else
-        env.reward = no_action_reward
     end
-    env.num_actions += 1
-    env.is_terminated = check_terminated(env)
 
     return success
 end
@@ -142,7 +82,6 @@ function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vert
     success = false
 
     if is_valid_split(env.mesh, quad, edge, maxdegree)
-        old_score = env.current_score
 
         new_vertex_idx = env.mesh.new_vertex_pointer
 
@@ -153,13 +92,8 @@ function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vert
         env.desired_degree[new_vertex_idx] = new_vertex_desired_degree
 
         update_env_after_action!(env)
-        env.reward = old_score - env.current_score
         success = true
-    else
-        env.reward = no_action_reward
     end
-    env.num_actions += 1
-    env.is_terminated = check_terminated(env)
 
     return success
 end
@@ -179,8 +113,6 @@ function step_global_split!(env, quad_idx, half_edge_idx, maxsteps; maxdegree = 
 
     success = false
     if is_valid_global_split(env.mesh, quad_idx, half_edge_idx, maxsteps, maxdegree)
-        old_score = env.current_score
-
         tracker = Tracker()
         @assert global_split!(env.mesh, quad_idx, half_edge_idx, tracker, maxsteps, maxdegree)
         synchronize_desired_degree_size!(env)
@@ -189,13 +121,8 @@ function step_global_split!(env, quad_idx, half_edge_idx, maxsteps; maxdegree = 
         new_interior_vertex_desired_degree)
 
         update_env_after_action!(env)
-        env.reward = old_score - env.current_score
         success = true
-    else
-        env.reward = no_action_reward
     end
-    env.num_actions += 1
-    env.is_terminated = check_terminated(env)
 
     return success
 end
@@ -203,7 +130,6 @@ end
 function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
     success = false
     if is_valid_collapse(env.mesh, quad, edge, maxdegree)
-        old_score = env.current_score
         
         current_vertex = env.mesh.connectivity[edge, quad]
         collapsed_vertex = env.mesh.connectivity[next(next(edge)), quad]
@@ -219,25 +145,12 @@ function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
         env.desired_degree[collapsed_vertex] = 0
 
         update_env_after_action!(env)
-        env.reward = old_score - env.current_score
-
         success = true
-    else
-        env.reward = no_action_reward
     end
-    env.num_actions += 1
-    env.is_terminated = check_terminated(env)
 
     return success
 end
 
-function step_nothing!(env; reward = 0)
-    env.num_actions += 1
-    env.reward = reward
-    env.is_terminated = check_terminated(env)
-
-    return true
-end
 
 function make_edge_pairs(mesh)
     total_nq = quad_buffer(mesh)
@@ -324,10 +237,3 @@ function reindex_game_env!(env)
     env.vertex_score = env.mesh.degree - env.desired_degree
 end
 
-function active_vertex_desired_degree(env)
-    return env.desired_degree[env.mesh.active_vertex]
-end
-
-function active_vertex_score(env)
-    return env.vertex_score[env.mesh.active_vertex]
-end

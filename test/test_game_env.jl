@@ -19,19 +19,12 @@ QM = QuadMeshGame
 mesh = QM.square_mesh(2)
 d0 = copy(mesh.degree[mesh.active_vertex])
 @test QM.left_flip!(mesh, 1, 2)
-env = QM.GameEnv(mesh, d0, 10)
+env = QM.GameEnv(mesh, d0)
 
-@test env.num_actions == 0
-@test env.max_actions == 10
-@test allequal(d0, env.desired_degree[mesh.active_vertex])
+@test allequal(d0, QM.active_vertex_desired_degree(env))
 
 test_vs = [0,1,0,-1,-1,0,1,0,0]
-@test allequal(QM.active_vertex_scores(env), test_vs)
-@test env.current_score == 4
-@test env.opt_score == 0
-@test env.initial_score == 4
-@test env.reward == 0
-@test !env.is_terminated
+@test allequal(QM.active_vertex_score(env), test_vs)
 
 
 mesh = QM.square_mesh(2)
@@ -89,7 +82,7 @@ test_elem_5_4 = [7,6,10,11,3,2,5,9,14,15,12,8,8,4,0,0,1,5,2,1,0,0,13,14,9,13,0,0
 
 
 mesh = QM.square_mesh(2)
-env = QM.GameEnv(mesh, mesh.degree[mesh.active_vertex], 10)
+env = QM.GameEnv(mesh, mesh.degree[mesh.active_vertex])
 QM.step_split!(env, 1, 3)
 
 @test env.desired_degree[10] == 4
@@ -118,34 +111,18 @@ test_desired_degree = [[2,3,2,3,0,3,2,3,2,4]; zeros(Int, QM.vertex_buffer(env.me
 mesh = QM.square_mesh(2)
 d0 = deepcopy(mesh.degree[mesh.active_vertex])
 QM.left_flip!(mesh, 1, 2)
-env = QM.GameEnv(mesh, d0, 4)
-QM.step_nothing!(env)
-@test !env.is_terminated
-@test env.reward == 0
-@test env.num_actions == 1
-
-QM.step_nothing!(env)
-@test !env.is_terminated
-@test env.reward == 0
-
-QM.step_nothing!(env)
-@test !env.is_terminated
-@test env.reward == 0
-
-QM.step_nothing!(env)
-@test env.is_terminated
-@test env.reward == 0
+env = QM.GameEnv(mesh, d0)
 
 
 ############################################################################################################
 # Test reindex game env
 mesh = QM.square_mesh(2)
-env = QM.GameEnv(mesh, mesh.degree[mesh.active_vertex], 10)
-QM.step_split!(env, 1, 3)
-QM.step_left_flip!(env, 1, 2)
-QM.step_left_flip!(env, 1, 2)
-QM.step_left_flip!(env, 1, 2)
-QM.step_collapse!(env, 1, 2)
+env = QM.GameEnv(mesh, mesh.degree[mesh.active_vertex])
+@test QM.step_split!(env, 1, 3)
+@test QM.step_left_flip!(env, 1, 2)
+@test QM.step_left_flip!(env, 1, 2)
+@test QM.step_left_flip!(env, 1, 2)
+@test QM.step_collapse!(env, 1, 2)
 
 QM.reindex_game_env!(env)
 
@@ -173,7 +150,7 @@ d0 = [2,3,2,3,3,2,3,2,4]
 # TEST COLLAPSING BOUNDARY QUAD
 mesh = QM.square_mesh(2)
 desired_degree = deepcopy(mesh.degree[mesh.active_vertex])
-env = QM.GameEnv(mesh, desired_degree, 5)
+env = QM.GameEnv(mesh, desired_degree)
 QM.step_collapse!(env, 1, 3)
 degree = [2,2,2,4,3,2,3,2]
 @test allequal(QM.active_vertex_degrees(env.mesh), degree)
@@ -189,16 +166,13 @@ on_boundary = trues(8)
 ############################################################################################################
 mesh = QM.square_mesh(2)
 d0 = QM.active_vertex_degrees(mesh)
-env = QM.GameEnv(mesh, d0, 5)
+env = QM.GameEnv(mesh, d0)
 
 @test QM.step_global_split!(env, 2, 1, 10)
 d0 = [2,3,2,3,4,3,2,3,2,4,4,3,3]
 @test allequal(QM.active_vertex_desired_degree(env), d0)
 vs = [0,1,0,0,-1,0,0,0,0,0,0,0,0]
 @test allequal(QM.active_vertex_score(env), vs)
-@test env.current_score == 2
-@test env.opt_score == 0
-@test env.reward == -2
 ############################################################################################################
 
 
@@ -206,7 +180,7 @@ vs = [0,1,0,0,-1,0,0,0,0,0,0,0,0]
 ############################################################################################################
 mesh = QM.square_mesh(3)
 d0 = QM.active_vertex_degrees(mesh)
-env = QM.GameEnv(mesh, d0, 5)
+env = QM.GameEnv(mesh, d0)
 
 @test QM.step_global_split!(env, 2, 1, 10)
 @test QM.number_of_quads(env.mesh) == 14
@@ -228,7 +202,7 @@ connectivity = [1 5 4 2
                 4 5 7 6]
 mesh = QM.QuadMesh(vertices, connectivity')
 d0 = [2,3,2,4,3,3,2]
-env = QM.GameEnv(mesh, d0, 10)
+env = QM.GameEnv(mesh, d0)
 @test QM.step_global_split!(env, 2, 1, 10)
 
 d0 = [2,3,2,4,3,3,2,4,4,3,4,3]
@@ -250,7 +224,7 @@ connectivity = [1 4 5 2
                 7 8 10 9]
 mesh = QM.QuadMesh(vertices, connectivity')
 d0 = [2,3,2,3,4,3,4,3,3,2]
-env = QM.GameEnv(mesh, d0, 10)
+env = QM.GameEnv(mesh, d0)
 @test QM.step_global_split!(env, 2, 1, 10)
 
 d0 = [2,3,2,3,4,3,4,3,3,2,4,4,4,3,4,4,3]
@@ -272,7 +246,7 @@ connectivity = [1 4 5 2
 mesh = QM.QuadMesh(vertices, connectivity')
 
 d0 = [2,3,2,3,4,3,4,2]
-env = QM.GameEnv(mesh, d0, 10)
+env = QM.GameEnv(mesh, d0)
 
 @test QM.step_global_split!(env, 2, 1, 10)
 d0 = [2,3,2,3,4,3,4,2,4,4,4]
@@ -296,7 +270,7 @@ connectivity = [1 4 5 2
                 8 10 11 9]
 mesh = QM.QuadMesh(vertices, connectivity')
 d0 = [2,3,2,3,4,3,3,4,3,4,2]
-env = QM.GameEnv(mesh, d0, 10)
+env = QM.GameEnv(mesh, d0)
 
 @test QM.step_global_split!(env, 2, 1, 10)
 
@@ -312,7 +286,7 @@ vs = [0,1,0,0,-1,0,0,0,0,-2,1,0,0,0,0,0]
 # larger mesh
 mesh = QM.square_mesh(6)
 d0 = QM.active_vertex_degrees(mesh)
-env = QM.GameEnv(mesh, d0, 10)
+env = QM.GameEnv(mesh, d0)
 
 @test QM.step_global_split!(env, 21, 2, 10)
 @test QM.number_of_vertices(env.mesh) == 57
