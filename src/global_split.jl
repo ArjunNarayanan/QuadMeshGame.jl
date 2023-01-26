@@ -122,8 +122,57 @@ function global_split_reverse_path_terminates(mesh, quad, half_edge, target_quad
     return terminates, loops
 end
 
+function check_finite_global_split_without_loops(mesh, quad, half_edge, maxsteps)
+    numsteps = 0
+    terminates = false
+    visited_quads = falses(quad_buffer(mesh))
 
-function check_finite_global_split_length(mesh, quad, half_edge, maxsteps)
+    # run forward path
+    current_quad = quad 
+    current_half_edge = half_edge
+    while numsteps < maxsteps && !terminates
+        numsteps += 1
+        if visited_quads[current_quad]
+            break
+        else
+            visited_quads[current_quad] = true
+        end
+
+        if !has_neighbor(mesh, current_quad, next(current_half_edge))
+            terminates = true
+        else 
+            current_quad, current_half_edge = step_forward_global_split_path(mesh, current_quad, current_half_edge)
+        end
+    end
+
+    if !terminates 
+        return false
+    end
+
+    # run reverse path
+    current_quad = neighbor(mesh, quad, half_edge)
+    current_half_edge = twin(mesh, quad, half_edge)
+    numsteps = 0
+    terminates = false
+    while numsteps < maxsteps && !terminates
+        numsteps += 1
+        if visited_quads[current_quad]
+            break
+        else
+            visited_quads[current_quad] = true
+        end
+
+        if !has_neighbor(mesh, current_quad, previous(current_half_edge))
+            terminates = true
+        else 
+            current_quad, current_half_edge = step_reverse_global_split_path(mesh, current_quad, current_half_edge)
+        end
+    end
+
+    return terminates
+end
+
+function check_finite_global_split(mesh, quad, half_edge, maxsteps)
     @assert has_neighbor(mesh, quad, half_edge)
 
     target_quad, target_half_edge = neighbor(mesh, quad, half_edge), twin(mesh, quad, half_edge)
@@ -159,7 +208,31 @@ function is_valid_global_split(mesh, quad_idx, half_edge_idx, maxsteps, maxdegre
         return false
     end
 
-    terminates = check_finite_global_split_length(mesh, quad_idx, half_edge_idx, maxsteps)
+    terminates = check_finite_global_split(mesh, quad_idx, half_edge_idx, maxsteps)
+    if !terminates
+        return false
+    end
+
+    return true
+end
+
+function is_valid_global_split_without_loops(mesh, quad_idx, half_edge_idx, maxsteps, maxdegree)
+    if !is_active_quad(mesh, quad_idx) || !has_neighbor(mesh, quad_idx, half_edge_idx)
+        return false
+    end
+
+    # degree of v1 increases by 1 so if it is at maxdegree, return false
+    v1 = vertex(mesh, quad_idx, half_edge_idx)
+    if degree(mesh, v1) >= maxdegree 
+        return false
+    end
+
+    v2 = vertex(mesh, quad_idx, next(half_edge_idx))
+    if degree(mesh, v2) < 3
+        return false
+    end
+
+    terminates = check_finite_global_split_without_loops(mesh, quad_idx, half_edge_idx, maxsteps)
     if !terminates
         return false
     end
@@ -336,7 +409,6 @@ function global_split_quads_along_path!(mesh, quad, half_edge, target_quad, targ
     return loops
 end
 
-
 function global_split!(mesh, quad_idx, half_edge_idx, tracker, maxsteps, maxdegree = 7)
     @warn "This is experimental functionality"
     
@@ -355,5 +427,36 @@ function global_split!(mesh, quad_idx, half_edge_idx, tracker, maxsteps, maxdegr
         @assert !loops "Unexpected loop in second global split arm!"
     end
 
+    return true
+end
+
+function global_split_quads_along_path_without_loops!(mesh, quad, half_edge, tracker, maxsteps)
+    numsteps = 0
+    terminated = false
+
+    while !terminated && numsteps <= maxsteps
+        numsteps += 1
+        if is_valid_path_split(mesh, quad, half_edge)
+            split_neighboring_quad_along_path!(mesh, quad, half_edge, tracker)
+            quad, half_edge = step_forward_global_split_path(mesh, quad, half_edge)
+        else
+            @assert !has_neighbor(mesh, quad, next(half_edge))
+            terminated = true
+        end
+    end
+    @assert terminated
+end
+
+function global_split_without_loops!(mesh, quad_idx, half_edge_idx, tracker, maxsteps, maxdegree = 7)
+    
+    if !is_valid_global_split_without_loops(mesh, quad_idx, half_edge_idx, maxsteps, maxdegree)
+        return false
+    end
+
+    new_quad_idx = insert_initial_quad_for_global_split!(mesh, quad_idx, half_edge_idx, tracker)
+
+    global_split_quads_along_path_without_loops!(mesh, quad_idx, half_edge_idx, tracker, maxsteps)
+    global_split_quads_along_path_without_loops!(mesh, new_quad_idx, 2, tracker, maxsteps)
+    
     return true
 end

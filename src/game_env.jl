@@ -46,7 +46,7 @@ function update_env_after_action!(env)
     env.vertex_score = env.mesh.degree - env.desired_degree
 end
 
-function step_left_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
+function step_left_flip!(env, quad, edge; maxdegree=7)
     success = false
     if is_valid_left_flip(env.mesh, quad, edge, maxdegree)
         @assert left_flip!(env.mesh, quad, edge, maxdegree)
@@ -58,7 +58,7 @@ function step_left_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
     return success
 end
 
-function step_right_flip!(env, quad, edge; maxdegree=7, no_action_reward=-4)
+function step_right_flip!(env, quad, edge; maxdegree=7)
     success = false
     if is_valid_right_flip(env.mesh, quad, edge, maxdegree)
         @assert right_flip!(env.mesh, quad, edge, maxdegree)
@@ -108,7 +108,7 @@ function update_desired_degree_of_new_vertices!(env, vertex_ids, boundary_degree
     end
 end
 
-function step_global_split!(env, quad_idx, half_edge_idx, maxsteps; maxdegree = 7, no_action_reward = -4,
+function step_global_split!(env, quad_idx, half_edge_idx, maxsteps; maxdegree = 7,
     new_boundary_vertex_desired_degree = 3, new_interior_vertex_desired_degree = 4)
 
     success = false
@@ -127,7 +127,7 @@ function step_global_split!(env, quad_idx, half_edge_idx, maxsteps; maxdegree = 
     return success
 end
 
-function step_collapse!(env, quad, edge; maxdegree = 7, no_action_reward=-4)
+function step_collapse!(env, quad, edge; maxdegree = 7)
     success = false
     if is_valid_collapse(env.mesh, quad, edge, maxdegree)
         
