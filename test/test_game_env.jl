@@ -166,6 +166,32 @@ on_boundary = trues(8)
 
 
 
+############################################################################################################
+# TEST BOUNDARY SPLIT
+mesh = QM.square_mesh(2)
+d0 = QM.active_vertex_degrees(mesh)
+env = QM.GameEnv(mesh, d0)
+@test !QM.step_boundary_split!(env, 1, 1)
+
+@test QM.step_boundary_split!(env, 3, 4)
+desired_degree = [2,3,2,3,4,3,2,3,2,3,3]
+@test allequal(QM.active_vertex_desired_degree(env), desired_degree)
+vs = [0,0,0,-1,1,0,0,0,0,0,0]
+@test allequal(QM.active_vertex_score(env), vs)
+############################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -20,6 +20,10 @@ end
 #     include("test_global_split.jl")
 # end
 
+@testset "test boundary split" begin
+    include("test_boundary_split.jl")
+end
+
 @testset "test Game Env" begin
     include("test_game_env.jl")
 end

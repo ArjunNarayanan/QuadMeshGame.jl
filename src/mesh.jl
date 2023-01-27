@@ -277,6 +277,14 @@ function vertex_coordinates(mesh::QuadMesh, vertex)
     return mesh.vertices[:, vertex]
 end
 
+function active_vertex_on_boundary(mesh)
+    return mesh.vertex_on_boundary[mesh.active_vertex]
+end
+
+function active_vertex_degrees(mesh)
+    return mesh.degree[mesh.active_vertex]
+end
+
 function active_vertex_coordinates(mesh::QuadMesh)
     return mesh.vertices[:, mesh.active_vertex]
 end
@@ -310,10 +318,6 @@ end
 function degree(mesh::QuadMesh, vertex)
     @assert is_active_vertex(mesh, vertex)
     return mesh.degree[vertex]
-end
-
-function active_vertex_degrees(mesh)
-    return mesh.degree[mesh.active_vertex]
 end
 
 function neighbor(mesh::QuadMesh, quad, edge)

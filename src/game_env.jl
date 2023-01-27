@@ -78,7 +78,7 @@ function synchronize_desired_degree_size!(env)
     end
 end
 
-function step_split!(env, quad, edge; maxdegree=7, no_action_reward=-4, new_vertex_desired_degree = 4)
+function step_split!(env, quad, edge; maxdegree=7, new_vertex_desired_degree = 4)
     success = false
 
     if is_valid_split(env.mesh, quad, edge, maxdegree)
@@ -124,6 +124,23 @@ function step_global_split!(env, quad_idx, half_edge_idx, maxsteps; maxdegree = 
         success = true
     end
 
+    return success
+end
+
+function step_boundary_split!(env, quad_idx, half_edge_idx; maxdegree = 7, new_boundary_desired_degree = 3)
+    success = false
+    if is_valid_boundary_split(env.mesh, quad_idx, half_edge_idx, maxdegree)
+        nv1 = env.mesh.new_vertex_pointer
+        nv2 = nv1 + 1
+
+        @assert boundary_split!(env.mesh, quad_idx, half_edge_idx, maxdegree)
+        synchronize_desired_degree_size!(env)
+
+        env.desired_degree[[nv1,nv2]] .= new_boundary_desired_degree
+
+        update_env_after_action!(env)
+        success = true
+    end
     return success
 end
 
