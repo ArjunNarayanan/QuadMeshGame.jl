@@ -24,6 +24,10 @@ end
     include("test_boundary_split.jl")
 end
 
+@testset "test distance to boundary" begin
+    include("test_distance_to_boundary.jl")
+end
+
 @testset "test Game Env" begin
     include("test_game_env.jl")
 end

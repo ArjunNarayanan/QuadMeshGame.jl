@@ -8,6 +8,7 @@ include("split.jl")
 include("collapse.jl")
 include("boundary_split.jl")
 include("check_valid_mesh.jl")
+include("distance_to_boundary.jl")
 include("game_env.jl")
 
 end
