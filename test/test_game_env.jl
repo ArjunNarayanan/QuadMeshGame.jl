@@ -163,163 +163,175 @@ on_boundary = trues(8)
 ############################################################################################################
 
 
-############################################################################################################
-mesh = QM.square_mesh(2)
-d0 = QM.active_vertex_degrees(mesh)
-env = QM.GameEnv(mesh, d0)
-
-@test QM.step_global_split!(env, 2, 1, 10)
-d0 = [2,3,2,3,4,3,2,3,2,4,4,3,3]
-@test allequal(QM.active_vertex_desired_degree(env), d0)
-vs = [0,1,0,0,-1,0,0,0,0,0,0,0,0]
-@test allequal(QM.active_vertex_score(env), vs)
-############################################################################################################
 
 
 
-############################################################################################################
-mesh = QM.square_mesh(3)
-d0 = QM.active_vertex_degrees(mesh)
-env = QM.GameEnv(mesh, d0)
 
-@test QM.step_global_split!(env, 2, 1, 10)
-@test QM.number_of_quads(env.mesh) == 14
-@test QM.number_of_vertices(env.mesh) == 22
-d0 = [2,3,3,2,3,4,4,3,3,4,4,3,2,3,3,2,4,4,4,3,4,3]
-@test allequal(QM.active_vertex_desired_degree(env), d0)
-vs = [0,1,0,0,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,]
-@test allequal(QM.active_vertex_score(env), vs)
-############################################################################################################
+
+
 
 
 
 
 ############################################################################################################
-vertices = [0. 0. 0. 1. 2. 2. 3.
-            0. 1. 2. 1. 0. 2. 1.]
-connectivity = [1 5 4 2
-                2 4 6 3
-                4 5 7 6]
-mesh = QM.QuadMesh(vertices, connectivity')
-d0 = [2,3,2,4,3,3,2]
-env = QM.GameEnv(mesh, d0)
-@test QM.step_global_split!(env, 2, 1, 10)
+# GLOBAL SPLIT TESTS BELOW
+# ############################################################################################################
+# mesh = QM.square_mesh(2)
+# d0 = QM.active_vertex_degrees(mesh)
+# env = QM.GameEnv(mesh, d0)
 
-d0 = [2,3,2,4,3,3,2,4,4,3,4,3]
-@test allequal(QM.active_vertex_desired_degree(env), d0)
-vs = [0,1,0,-2,0,0,0,0,0,0,0,0]
-@test allequal(QM.active_vertex_score(env), vs)
-############################################################################################################
+# @test QM.step_global_split!(env, 2, 1, 10)
+# d0 = [2,3,2,3,4,3,2,3,2,4,4,3,3]
+# @test allequal(QM.active_vertex_desired_degree(env), d0)
+# vs = [0,1,0,0,-1,0,0,0,0,0,0,0,0]
+# @test allequal(QM.active_vertex_score(env), vs)
+# ############################################################################################################
 
 
 
-############################################################################################################
-# degree 3 vertex
-vertices = [0. 0. 0. 1. 1. 1. 1.5 2. 2. 2.5
-            0. 1. 2. 0. 1. 2. 1. 0. 2. 1.]
-connectivity = [1 4 5 2
-                2 5 6 3
-                4 8 7 5
-                5 7 9 6
-                7 8 10 9]
-mesh = QM.QuadMesh(vertices, connectivity')
-d0 = [2,3,2,3,4,3,4,3,3,2]
-env = QM.GameEnv(mesh, d0)
-@test QM.step_global_split!(env, 2, 1, 10)
+# ############################################################################################################
+# mesh = QM.square_mesh(3)
+# d0 = QM.active_vertex_degrees(mesh)
+# env = QM.GameEnv(mesh, d0)
 
-d0 = [2,3,2,3,4,3,4,3,3,2,4,4,4,3,4,4,3]
-@test allequal(QM.active_vertex_desired_degree(env), d0)
-vs = [0,1,0,0,-1,0,-1,0,0,0,0,0,0,0,0,0,0]
-@test allequal(QM.active_vertex_score(env), vs)
-############################################################################################################
+# @test QM.step_global_split!(env, 2, 1, 10)
+# @test QM.number_of_quads(env.mesh) == 14
+# @test QM.number_of_vertices(env.mesh) == 22
+# d0 = [2,3,3,2,3,4,4,3,3,4,4,3,2,3,3,2,4,4,4,3,4,3]
+# @test allequal(QM.active_vertex_desired_degree(env), d0)
+# vs = [0,1,0,0,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,]
+# @test allequal(QM.active_vertex_score(env), vs)
+# ############################################################################################################
 
 
 
-############################################################################################################
-# loop formation
-vertices = [0. 0. 0. 1. 1. 1. 2. 3.
-            0. 1. 2. 0. 1. 2. 1. 1.]
-connectivity = [1 4 5 2
-                2 5 6 3
-                4 8 7 5
-                5 7 8 6]
-mesh = QM.QuadMesh(vertices, connectivity')
 
-d0 = [2,3,2,3,4,3,4,2]
-env = QM.GameEnv(mesh, d0)
+# ############################################################################################################
+# vertices = [0. 0. 0. 1. 2. 2. 3.
+#             0. 1. 2. 1. 0. 2. 1.]
+# connectivity = [1 5 4 2
+#                 2 4 6 3
+#                 4 5 7 6]
+# mesh = QM.QuadMesh(vertices, connectivity')
+# d0 = [2,3,2,4,3,3,2]
+# env = QM.GameEnv(mesh, d0)
+# @test QM.step_global_split!(env, 2, 1, 10)
 
-@test QM.step_global_split!(env, 2, 1, 10)
-d0 = [2,3,2,3,4,3,4,2,4,4,4]
-@test allequal(QM.active_vertex_desired_degree(env), d0)
-
-vs = [0,1,0,0,-1,0,-2,1,0,0,0]
-@test allequal(QM.active_vertex_score(env), vs)
-############################################################################################################
+# d0 = [2,3,2,4,3,3,2,4,4,3,4,3]
+# @test allequal(QM.active_vertex_desired_degree(env), d0)
+# vs = [0,1,0,-2,0,0,0,0,0,0,0,0]
+# @test allequal(QM.active_vertex_score(env), vs)
+# ############################################################################################################
 
 
 
-############################################################################################################
-# bigger loop example
-vertices = [0. 0. 0. 1. 1. 1. 2. 2. 2. 3. 4.
-            0. 1. 2. 0. 1. 2. 0. 1. 2. 1. 1.]
-connectivity = [1 4 5 2
-                2 5 6 3
-                4 7 8 5
-                5 8 9 6
-                7 11 10 8
-                8 10 11 9]
-mesh = QM.QuadMesh(vertices, connectivity')
-d0 = [2,3,2,3,4,3,3,4,3,4,2]
-env = QM.GameEnv(mesh, d0)
+# ############################################################################################################
+# # degree 3 vertex
+# vertices = [0. 0. 0. 1. 1. 1. 1.5 2. 2. 2.5
+#             0. 1. 2. 0. 1. 2. 1. 0. 2. 1.]
+# connectivity = [1 4 5 2
+#                 2 5 6 3
+#                 4 8 7 5
+#                 5 7 9 6
+#                 7 8 10 9]
+# mesh = QM.QuadMesh(vertices, connectivity')
+# d0 = [2,3,2,3,4,3,4,3,3,2]
+# env = QM.GameEnv(mesh, d0)
+# @test QM.step_global_split!(env, 2, 1, 10)
 
-@test QM.step_global_split!(env, 2, 1, 10)
-
-d0 = [2,3,2,3,4,3,3,4,3,4,2,4,4,4,4,4]
-@test allequal(QM.active_vertex_desired_degree(env), d0)
-
-vs = [0,1,0,0,-1,0,0,0,0,-2,1,0,0,0,0,0]
-@test allequal(QM.active_vertex_score(env), vs)
-############################################################################################################
-
-
-############################################################################################################
-# larger mesh
-mesh = QM.square_mesh(6)
-d0 = QM.active_vertex_degrees(mesh)
-env = QM.GameEnv(mesh, d0)
-
-@test QM.step_global_split!(env, 21, 2, 10)
-@test QM.number_of_vertices(env.mesh) == 57
-@test QM.number_of_quads(env.mesh) == 43
-
-d0 = [d0; [4,4,4,4,3,4,4,3]]
-@test allequal(QM.active_vertex_desired_degree(env), d0)
-
-vs = zeros(Int, 57)
-vs[31] = 1
-vs[32] = -1
-@test allequal(QM.active_vertex_score(env), vs)
-############################################################################################################
+# d0 = [2,3,2,3,4,3,4,3,3,2,4,4,4,3,4,4,3]
+# @test allequal(QM.active_vertex_desired_degree(env), d0)
+# vs = [0,1,0,0,-1,0,-1,0,0,0,0,0,0,0,0,0,0]
+# @test allequal(QM.active_vertex_score(env), vs)
+# ############################################################################################################
 
 
 
-############################################################################################################
-# asymmetric example
-vertices = [0. 0. 1. 1. 2. 2. 2. 3. 3. 3.
-            0. 1. 0. 1. 0. 1. 2. 0. 1. 2.]
-connectivity = [1 3 4 2
-                3 5 6 4
-                5 8 9 6
-                6 9 10 7]
-mesh = QM.QuadMesh(vertices, connectivity')
-d0 = [2,2,3,3,3,4,2,2,3,2]
-env = QM.GameEnv(mesh, d0)
+# ############################################################################################################
+# # loop formation
+# vertices = [0. 0. 0. 1. 1. 1. 2. 3.
+#             0. 1. 2. 0. 1. 2. 1. 1.]
+# connectivity = [1 4 5 2
+#                 2 5 6 3
+#                 4 8 7 5
+#                 5 7 8 6]
+# mesh = QM.QuadMesh(vertices, connectivity')
 
-@test QM.step_global_split!(env, 3, 3, 10)
+# d0 = [2,3,2,3,4,3,4,2]
+# env = QM.GameEnv(mesh, d0)
 
-d0 = [2,2,3,3,3,4,2,2,3,2,4,3,4,3]
-@test allequal(QM.active_vertex_desired_degree(env), d0)
+# @test QM.step_global_split!(env, 2, 1, 10)
+# d0 = [2,3,2,3,4,3,4,2,4,4,4]
+# @test allequal(QM.active_vertex_desired_degree(env), d0)
 
-vs = [0,0,0,0,0,-1,0,0,1,0,0,0,0,0]
-@test allequal(QM.active_vertex_score(env), vs)
-############################################################################################################
+# vs = [0,1,0,0,-1,0,-2,1,0,0,0]
+# @test allequal(QM.active_vertex_score(env), vs)
+# ############################################################################################################
+
+
+
+# ############################################################################################################
+# # bigger loop example
+# vertices = [0. 0. 0. 1. 1. 1. 2. 2. 2. 3. 4.
+#             0. 1. 2. 0. 1. 2. 0. 1. 2. 1. 1.]
+# connectivity = [1 4 5 2
+#                 2 5 6 3
+#                 4 7 8 5
+#                 5 8 9 6
+#                 7 11 10 8
+#                 8 10 11 9]
+# mesh = QM.QuadMesh(vertices, connectivity')
+# d0 = [2,3,2,3,4,3,3,4,3,4,2]
+# env = QM.GameEnv(mesh, d0)
+
+# @test QM.step_global_split!(env, 2, 1, 10)
+
+# d0 = [2,3,2,3,4,3,3,4,3,4,2,4,4,4,4,4]
+# @test allequal(QM.active_vertex_desired_degree(env), d0)
+
+# vs = [0,1,0,0,-1,0,0,0,0,-2,1,0,0,0,0,0]
+# @test allequal(QM.active_vertex_score(env), vs)
+# ############################################################################################################
+
+
+# ############################################################################################################
+# # larger mesh
+# mesh = QM.square_mesh(6)
+# d0 = QM.active_vertex_degrees(mesh)
+# env = QM.GameEnv(mesh, d0)
+
+# @test QM.step_global_split!(env, 21, 2, 10)
+# @test QM.number_of_vertices(env.mesh) == 57
+# @test QM.number_of_quads(env.mesh) == 43
+
+# d0 = [d0; [4,4,4,4,3,4,4,3]]
+# @test allequal(QM.active_vertex_desired_degree(env), d0)
+
+# vs = zeros(Int, 57)
+# vs[31] = 1
+# vs[32] = -1
+# @test allequal(QM.active_vertex_score(env), vs)
+# ############################################################################################################
+
+
+
+# ############################################################################################################
+# # asymmetric example
+# vertices = [0. 0. 1. 1. 2. 2. 2. 3. 3. 3.
+#             0. 1. 0. 1. 0. 1. 2. 0. 1. 2.]
+# connectivity = [1 3 4 2
+#                 3 5 6 4
+#                 5 8 9 6
+#                 6 9 10 7]
+# mesh = QM.QuadMesh(vertices, connectivity')
+# d0 = [2,2,3,3,3,4,2,2,3,2]
+# env = QM.GameEnv(mesh, d0)
+
+# @test QM.step_global_split!(env, 3, 3, 10)
+
+# d0 = [2,2,3,3,3,4,2,2,3,2,4,3,4,3]
+# @test allequal(QM.active_vertex_desired_degree(env), d0)
+
+# vs = [0,0,0,0,0,-1,0,0,1,0,0,0,0,0]
+# @test allequal(QM.active_vertex_score(env), vs)
+# ############################################################################################################

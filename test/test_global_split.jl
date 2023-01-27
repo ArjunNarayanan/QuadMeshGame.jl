@@ -837,7 +837,7 @@ connectivity = [1 4 5 2
                 5 7 9 6
                 7 8 10 9]
 mesh = QM.QuadMesh(vertices, connectivity')
-@test !QM.is_valid_global_split_without_loops(mesh, 2, 1, 10, 7)
+@test QM.is_valid_global_split_without_loops(mesh, 2, 1, 10, 7)
 ######################################################################################################
 
 
@@ -997,7 +997,32 @@ connectivity = [1 4 5 2
 mesh = QM.QuadMesh(vertices, connectivity')
 
 tracker = QM.Tracker()
-@test !QM.global_split_without_loops!(mesh, 2, 1, tracker, 10)
+@test QM.global_split_without_loops!(mesh, 2, 1, tracker, 10)
+
+@test QM.number_of_vertices(mesh) == 17
+@test QM.number_of_quads(mesh) == 11
+
+connectivity = [1 2 12 11 13 11 13 16 15 16 17
+                4 11 15 13 16 2 11 13 12 15 16
+                12 6 7 9 17 12 5 7 4 8 14
+                2 3 5 6 9 5 7 15 8 14 10]
+@test allequal(connectivity, QM.active_quad_connectivity(mesh))
+
+q2q = [0 6 9 7 8 2 4 5 3 8 5
+       9 4 8 5 11 1 6 7 1 9 10
+       6 0 7 0 0 3 3 3 0 0 0
+       0 0 6 2 4 7 8 10 10 11 0]
+@test allequal(q2q, QM.active_quad_q2q(mesh))
+
+e2e = [0 1 1 1 1 1 1 1 1 4 2
+       2 4 3 4 1 3 4 4 2 4 4
+       2 0 3 0 0 4 3 2 0 0 0
+       0 0 3 2 2 2 2 1 2 2 0]
+@test allequal(e2e, QM.active_quad_e2e(mesh))
+
+
+@test allequal(tracker.new_vertex_ids, [11, 12, 13, 14, 15, 16, 17])
+@test allequal(tracker.on_boundary, [false, false, false, true, false, false, true])
 ######################################################################################################
 
 
@@ -1005,7 +1030,6 @@ tracker = QM.Tracker()
 
 ######################################################################################################
 # showcase
-
 # using PlotQuadMesh
 # PQ = PlotQuadMesh
 
@@ -1016,11 +1040,11 @@ tracker = QM.Tracker()
 # tracker = QM.Tracker()
 # QM.global_split_without_loops!(mesh, 12, 2, tracker, 5)
 
-# QM.global_split_without_loops!(mesh, 27, 4, tracker, 5)
+# QM.global_split_without_loops!(mesh, 19, 4, tracker, 10)
 
-# QM.global_split_without_loops!(mesh, 12, 2, tracker, 10)
+# QM.global_split_without_loops!(mesh, 4, 1, tracker, 20)
 
 # QM.averagesmoothing!(mesh)
 # PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh),
-# number_elements = true, internal_order = true)[1]
+# number_elements = true, internal_order = true, fontsize = 10)[1]
 ######################################################################################################

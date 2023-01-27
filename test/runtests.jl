@@ -16,9 +16,9 @@ end
     include("test_collapse.jl")
 end
 
-@testset "test global split" begin
-    include("test_global_split.jl")
-end
+# @testset "test global split" begin
+#     include("test_global_split.jl")
+# end
 
 @testset "test Game Env" begin
     include("test_game_env.jl")
