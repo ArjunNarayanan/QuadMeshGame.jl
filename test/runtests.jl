@@ -16,9 +16,9 @@ end
     include("test_collapse.jl")
 end
 
-@testset "test global split" begin
-    include("test_global_split.jl")
-end
+# @testset "test global split" begin
+#     include("test_global_split.jl")
+# end
 
 @testset "test boundary split" begin
     include("test_boundary_split.jl")

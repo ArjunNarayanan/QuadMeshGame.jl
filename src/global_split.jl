@@ -122,6 +122,14 @@ function global_split_reverse_path_terminates(mesh, quad, half_edge, target_quad
     return terminates, loops
 end
 
+function mark_split_half_edges!(visited_quads, quad, edge, mesh)
+    visited_quads[edge, quad] = true
+    if has_neighbor(mesh, quad, edge)
+        opp_quad, opp_edge = neighbor(mesh, quad, edge), twin(mesh, quad, edge)
+        visited_quads[opp_edge, opp_quad] = true
+    end
+end
+
 function check_finite_global_split_without_loops(mesh, quad, half_edge, maxsteps)
     numsteps = 0
     terminates = false
@@ -130,20 +138,22 @@ function check_finite_global_split_without_loops(mesh, quad, half_edge, maxsteps
     # run forward path
     current_quad = quad 
     current_half_edge = half_edge
+    mark_split_half_edges!(visited_quads, current_quad, current_half_edge, mesh)
+
     while numsteps < maxsteps && !terminates
         numsteps += 1
-        if visited_quads[current_half_edge, current_quad]
-            break
-        else
-            visited_quads[current_half_edge, current_quad] = true
-        end
 
         if !has_neighbor(mesh, current_quad, next(current_half_edge))
             terminates = true
-        else 
+        elseif visited_quads[next(current_half_edge), current_quad]
+            return false
+        else
+            mark_split_half_edges!(visited_quads, current_quad, current_half_edge, mesh) 
             current_quad, current_half_edge = step_forward_global_split_path(mesh, current_quad, current_half_edge)
         end
     end
+    
+    error("incomplete")
 
     if !terminates 
         return false
