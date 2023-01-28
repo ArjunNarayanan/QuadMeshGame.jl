@@ -123,11 +123,13 @@ function QuadMesh(
     connectivity,
     q2q,
     e2e;
-    quad_buffer = 100,
-    vertex_buffer = 150,
     growth_factor = 2,
 )
     num_vertices = size(vertices, 2)
+    num_quads = size(connectivity, 2)
+
+    vertex_buffer = growth_factor * num_vertices
+    quad_buffer = growth_factor * num_quads
 
     edges, bndix = all_edges(connectivity)
     bnd_edges = edges[:, bndix]
@@ -160,7 +162,7 @@ function QuadMesh(vertices, connectivity)
     @assert nv == 4
 
     q2q, e2e = make_quad_connectivity(connectivity)
-    return QuadMesh(vertices, connectivity, q2q, e2e, quad_buffer = 2*nquads, vertex_buffer = 2*nverts)
+    return QuadMesh(vertices, connectivity, q2q, e2e)
 end
 
 function number_of_vertices(mesh::QuadMesh)
