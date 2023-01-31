@@ -108,13 +108,13 @@ function update_desired_degree_of_new_vertices!(env, vertex_ids, boundary_degree
     end
 end
 
-function step_global_split!(env, quad_idx, half_edge_idx, maxsteps; maxdegree = 7,
+function step_global_split_without_loops!(env, quad_idx, half_edge_idx, maxsteps; maxdegree = 7,
     new_boundary_vertex_desired_degree = 3, new_interior_vertex_desired_degree = 4)
 
     success = false
-    if is_valid_global_split(env.mesh, quad_idx, half_edge_idx, maxsteps, maxdegree)
+    if is_valid_global_split_without_loops(env.mesh, quad_idx, half_edge_idx, maxsteps, maxdegree)
         tracker = Tracker()
-        @assert global_split!(env.mesh, quad_idx, half_edge_idx, tracker, maxsteps, maxdegree)
+        @assert global_split_without_loops!(env.mesh, quad_idx, half_edge_idx, tracker, maxsteps, maxdegree)
         synchronize_desired_degree_size!(env)
 
         update_desired_degree_of_new_vertices!(env, tracker.new_vertex_ids, new_boundary_vertex_desired_degree,
