@@ -184,6 +184,80 @@ fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivi
 
 You can use `QuadMeshGame.is_valid_collapse(mesh, quad_index, half_edge_index)` to check if a particular collapse is possible or not.
 
+
+## Boundary split
+
+If we allow for vertex insertion along the boundary, we can perform a different kind of split than the one described earlier. The syntax is `QuadMeshGame.boundary_split!(mesh, quad_index, half_edge_index)`. This split can only be performed if the edge in question is incident on the boundary with the target vertex of the half-edge having degree 3. The split is performed by splitting the edge in question in two and connecting them to new vertices inserted on the boundary. Here's an example,
+
+```julia
+mesh = QM.square_mesh(2)
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    number_vertices=true, number_elements=true, internal_order=true)
+```
+
+<img src="examples/figures/split-initial.png" alt="drawing" width="600"/>
+
+```julia
+QM.boundary_split!(mesh, 4, 1)
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    number_vertices=true, number_elements=true, internal_order=true)
+```
+
+<img src="examples/figures/boundary_split.png" alt="drawing" width="600"/>
+
+
+You can use `QuadMeshGame.is_valid_boundary_split(mesh, quad_index, half_edge_index)` to check if a boundary split is possible or not.
+
+## Global split
+
+The boundary split can be extended to edges in the interior. In order to do this, we need to propagate the split through the mesh until it terminates on a boundary edge. This is no longer a local topological operation. Further, we need to be careful about several edge cases -- for example, a split can possibly loop back upon itself. To simplify this action we only allow this operation if the split,
+
+- Does not form a loop
+- Does not split a given edge more than once
+- Terminates in a finite number of steps specified by the user
+
+Since a split can result in several new vertex insertions, we provide a simple `struct Tracker` to keep track of the vertices inserted in the process of a global split. Here is an example,
+
+```julia
+mesh = QM.square_mesh(5)
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    number_vertices=true, number_elements=true, internal_order=true)
+```
+
+<img src="examples/figures/global-split-0.png" alt="drawing" width="600"/>
+
+```julia
+tracker = QM.Tracker()
+QM.global_split_without_loops!(mesh, 7, 2, tracker, 10)
+QM.averagesmoothing!(mesh)
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    number_vertices=true, number_elements=true, internal_order=true)
+```
+
+<img src="examples/figures/global-split-1.png" alt="drawing" width="600"/>
+
+We allow for quite rich behavior with split paths that can intersect and cross each other,
+
+```julia
+tracker = QM.Tracker()
+QM.global_split_without_loops!(mesh, 15, 4, tracker, 10)
+QM.averagesmoothing!(mesh)
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    number_vertices=true, number_elements=true, internal_order=true)
+```
+
+<img src="examples/figures/global-split-2.png" alt="drawing" width="600"/>
+
+```julia
+tracker = QM.Tracker()
+QM.global_split_without_loops!(mesh, 5, 1, tracker, 10)
+QM.averagesmoothing!(mesh)
+fig = PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh), 
+    number_vertices=true, number_elements=true, internal_order=true)
+```
+
+<img src="examples/figures/global-split-3.png" alt="drawing" width="600"/>
+
 ## Reindexing the mesh
 
 Since we allocate buffers for the mesh object, you may end up with a situation where the `active_quad_connectivity` contains indices which are greater than the number of vertices in the `active_vertex_coordinates` matrix. If you try to plot, `PyPlot` will complain that you are accessing out of bounds. We therefore provide a function to reindex the quads and vertices in a `QuadMesh`.
