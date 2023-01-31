@@ -24,7 +24,7 @@ end
 
 function all_active_quad_or_boundary(mesh)
     for quad in mesh.q2q
-        if !(QM.is_active_quad_or_boundary(mesh, quad))
+        if !(is_active_quad_or_boundary(mesh, quad))
             return false
         end
     end
@@ -35,5 +35,4 @@ function assert_valid_mesh(mesh)
     @assert all_active_vertices(mesh) "Found inactive vertices in mesh connectivity"
     @assert no_quad_self_reference(mesh) "Found self-referencing quads in mesh q2q"
     @assert all_active_quad_or_boundary(mesh) "Found inactive quads in mesh q2q"
-    return flag
 end

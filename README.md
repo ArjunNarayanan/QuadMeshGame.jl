@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/ArjunNarayanan/QuadMeshGame.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/ArjunNarayanan/QuadMeshGame.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![codecov](https://codecov.io/gh/ArjunNarayanan/QuadMeshGame.jl/branch/main/graph/badge.svg?token=mZU47Udyrl)](https://codecov.io/gh/ArjunNarayanan/QuadMeshGame.jl)
 
-Credit to [Per-Olof Persson](http://persson.berkeley.edu/) for giving me the idea and helping me out with this project.
+Credit to [Per-Olof Persson](http://persson.berkeley.edu/) for giving me the idea and helping me out with this project. Big thank you to [Lewis Pan](https://math.berkeley.edu/~yllpan/) for brainstorming ideas and solutions.
 
 This package implements connectivity editing operations on Quad Meshes. A Quad Mesh is a 2D mesh where all the elements are quadrilaterals. You can use the [PlotQuadMesh.jl](https://github.com/ArjunNarayanan/PlotQuadMesh.jl) package for visualization.
 
