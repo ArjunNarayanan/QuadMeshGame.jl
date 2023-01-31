@@ -148,8 +148,10 @@ function check_finite_global_split_without_loops(mesh, quad, half_edge, maxsteps
         elseif visited_quads[next(current_half_edge), current_quad]
             return false
         else
-            mark_split_half_edges!(visited_quads, current_quad, current_half_edge, mesh) 
-            current_quad, current_half_edge = step_forward_global_split_path(mesh, current_quad, current_half_edge)
+            mark_split_half_edges!(visited_quads, current_quad, 
+                next(current_half_edge), mesh) 
+            current_quad, current_half_edge = 
+                step_forward_global_split_path(mesh, current_quad, current_half_edge)
         end
     end
     
@@ -166,14 +168,11 @@ function check_finite_global_split_without_loops(mesh, quad, half_edge, maxsteps
     terminates = false
     while numsteps < maxsteps && !terminates
         numsteps += 1
-        if visited_quads[current_half_edge, current_quad]
-            break
-        else
-            visited_quads[current_half_edge, current_quad] = true
-        end
 
         if !has_neighbor(mesh, current_quad, previous(current_half_edge))
             terminates = true
+        elseif visited_quads[previous(current_half_edge), current_quad]
+            return false
         else 
             current_quad, current_half_edge = step_reverse_global_split_path(mesh, current_quad, current_half_edge)
         end
