@@ -187,7 +187,13 @@ You can use `QuadMeshGame.is_valid_collapse(mesh, quad_index, half_edge_index)` 
 
 ## Boundary split
 
-If we allow for vertex insertion along the boundary, we can perform a different kind of split than the one described earlier. The syntax is `QuadMeshGame.boundary_split!(mesh, quad_index, half_edge_index)`. This split can only be performed if the edge in question is incident on the boundary with the target vertex of the half-edge having degree 3. The split is performed by splitting the edge in question in two and connecting them to new vertices inserted on the boundary. Here's an example,
+If we allow for vertex insertion along the boundary, we can perform a different kind of split than the one described earlier. The syntax is `QuadMeshGame.boundary_split!(mesh, quad_index, half_edge_index)`. This split can only be performed if the edge,
+
+- is interior
+- has its target vertex on the boundary
+- the target vertex has degree 3
+
+ The split is performed by splitting the edge in question in two and connecting them to new vertices inserted on the boundary. Here's an example,
 
 ```julia
 mesh = QM.square_mesh(2)
@@ -212,9 +218,9 @@ You can use `QuadMeshGame.is_valid_boundary_split(mesh, quad_index, half_edge_in
 
 The boundary split can be extended to edges in the interior. In order to do this, we need to propagate the split through the mesh until it terminates on a boundary edge. This is no longer a local topological operation. Further, we need to be careful about several edge cases -- for example, a split can possibly loop back upon itself. To simplify this action we only allow this operation if the split,
 
-- Does not form a loop
-- Does not split a given edge more than once
-- Terminates in a finite number of steps specified by the user
+- does not form a loop
+- does not split a given edge more than once
+- terminates in a finite number of steps specified by the user
 
 Since a split can result in several new vertex insertions, we provide a simple `struct Tracker` to keep track of the vertices inserted in the process of a global split. Here is an example,
 
@@ -363,19 +369,11 @@ julia> env = QM.GameEnv(mesh, desired_degree, 10)
 GameEnv
         16 vertices
         9 quads
-        21 current score
-        10 remaining actions
 ```
 
-The `GameEnv` keeps track of a few things for you. 
+The `GameEnv` keeps track of the deviation from desired degree for each vertex. 
 
-- `env.num_action` : the number of actions taken so far
-- `env.current_score` : equal to `sum(abs.(env.vertex_score))`
-- `env.opt_score` : the optimum score equal to `abs(sum(env.vertex_score))`
-- `env.reward` : the reward for the previous action equal to the difference between `env.current_score` before and after the action.
-- `env.is_terminated` : whether or not the environment is terminated. The `GameEnv` is said to be terminal if the number of actions exceeds `env.max_actions` or `env.current_score == env.opt_score`.
-
-You can perform all the actions discussed above on the `GameEnv`, using the syntax `step_left_flip!(env, quad_index, half_edge_index)`, `step_right_flip!(env, quad_index, half_edge_index)`, `step_split!(env, quad_index, half_edge_index)`, and `step_collapse!(env, quad_index, half_edge_index)`. All of these functions accept a keyword argument `no_action_reward` -- if the requested action is not valid, the environment records this value as the reward. 
+You can perform all the actions discussed above on the `GameEnv`, using the syntax `step_left_flip!(env, quad_index, half_edge_index)`, `step_right_flip!(env, quad_index, half_edge_index)`, `step_split!(env, quad_index, half_edge_index)`, `step_collapse!(env, quad_index, half_edge_index)`, `step_boundary_split!(env, quad_index, half_edge_index)`, and `step_global_split_without_loops!(env, quad_index, half_edge_index)`.
 
 
 You've probably guessed that the language here is reminiscent of Reinforcement Learning. That is indeed the idea! In particular you can use `make_level3_template(mesh)` and `make_level4_template(mesh)` to generate an ordered list of vertices for each half edge. By looking at the scores of these vertices, an intelligent agent could determine what action needs to be taken to improve the quality of the mesh. This is precisely what I implement in my other package [ProximalPolicyOptimization.jl](https://github.com/ArjunNarayanan/ProximalPolicyOptimization.jl) which uses the [proximal policy optimization](https://openai.com/blog/openai-baselines-ppo/) algorithm to learn to play `QuadMeshGame`!
