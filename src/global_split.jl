@@ -154,8 +154,6 @@ function check_finite_global_split_without_loops(mesh, quad, half_edge, maxsteps
                 step_forward_global_split_path(mesh, current_quad, current_half_edge)
         end
     end
-    
-    error("incomplete")
 
     if !terminates 
         return false
@@ -173,7 +171,8 @@ function check_finite_global_split_without_loops(mesh, quad, half_edge, maxsteps
             terminates = true
         elseif visited_quads[previous(current_half_edge), current_quad]
             return false
-        else 
+        else
+            mark_split_half_edges!(visited_quads, current_quad, previous(current_half_edge), mesh) 
             current_quad, current_half_edge = step_reverse_global_split_path(mesh, current_quad, current_half_edge)
         end
     end
@@ -464,8 +463,8 @@ function global_split_without_loops!(mesh, quad_idx, half_edge_idx, tracker, max
 
     new_quad_idx = insert_initial_quad_for_global_split!(mesh, quad_idx, half_edge_idx, tracker)
 
-    global_split_quads_along_path_without_loops!(mesh, quad_idx, half_edge_idx, tracker, maxsteps)
-    global_split_quads_along_path_without_loops!(mesh, new_quad_idx, 2, tracker, maxsteps)
+    global_split_quads_along_path_without_loops!(mesh, quad_idx, half_edge_idx, tracker, 2*maxsteps)
+    global_split_quads_along_path_without_loops!(mesh, new_quad_idx, 2, tracker, 2*maxsteps)
     
     return true
 end

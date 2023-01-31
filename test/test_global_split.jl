@@ -986,7 +986,7 @@ test_degrees = [2, 2, 3, 3, 3, 3, 2, 2, 4, 2, 4, 3, 4, 3]
 
 
 ######################################################################################################
-# invalid split with degree 3 vertex
+# Split without loops handles degree 3 vertex
 vertices = [0. 0. 0. 1. 1. 1. 1.5 2. 2. 2.5
             0. 1. 2. 0. 1. 2. 1. 0. 2. 1.]
 connectivity = [1 4 5 2
@@ -995,6 +995,7 @@ connectivity = [1 4 5 2
                 5 7 9 6
                 7 8 10 9]
 mesh = QM.QuadMesh(vertices, connectivity')
+
 
 tracker = QM.Tracker()
 @test QM.global_split_without_loops!(mesh, 2, 1, tracker, 10)
@@ -1034,8 +1035,6 @@ e2e = [0 1 1 1 1 1 1 1 1 4 2
 # PQ = PlotQuadMesh
 
 # mesh = QM.square_mesh(5)
-# PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh),
-# number_elements = true, internal_order = true)[1]
 
 # tracker = QM.Tracker()
 # QM.global_split_without_loops!(mesh, 12, 2, tracker, 5)
@@ -1043,6 +1042,9 @@ e2e = [0 1 1 1 1 1 1 1 1 4 2
 # QM.global_split_without_loops!(mesh, 19, 4, tracker, 10)
 
 # QM.global_split_without_loops!(mesh, 4, 1, tracker, 20)
+
+# QM.is_valid_global_split_without_loops(mesh, 1, 2, 20, 7)
+# QM.global_split_without_loops!(mesh, 1, 2, tracker, 20)
 
 # QM.averagesmoothing!(mesh)
 # PQ.plot_mesh(QM.active_vertex_coordinates(mesh), QM.active_quad_connectivity(mesh),
