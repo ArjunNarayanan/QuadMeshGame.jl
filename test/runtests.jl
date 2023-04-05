@@ -4,6 +4,10 @@ using Test
     include("test_square_mesh.jl")
 end
 
+@testset "reindex and expand" begin
+    include("test_reindex_and_expand.jl")
+end
+
 @testset "test flip" begin
     include("test_flip.jl")
 end

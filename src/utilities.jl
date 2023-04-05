@@ -63,6 +63,13 @@ function zero_pad_vector(vec, num_new_entries)
     return pad_vector(vec, num_new_entries, zero(T))
 end
 
+function resize_and_zero_pad_vector(vector, total_size)
+    numrows = length(vector)
+    @assert numrows <= total_size
+    num_new_rows = total_size - numrows
+    return zero_pad_vector(vector, num_new_rows)
+end
+
 function pad_matrix_cols(mat, num_new_cols, value)
     nr, _ = size(mat)
     return [mat fill(value, (nr, num_new_cols))]
@@ -71,4 +78,11 @@ end
 function zero_pad_matrix_cols(m, num_new_cols)
     T = eltype(m)
     return pad_matrix_cols(m, num_new_cols, zero(T))
+end
+
+function resize_and_zero_pad_matrix(matrix, total_size)
+    numrows, numcols = size(matrix)
+    @assert numcols <= total_size
+    num_new_cols = total_size - numcols
+    return zero_pad_matrix_cols(matrix, num_new_cols)
 end

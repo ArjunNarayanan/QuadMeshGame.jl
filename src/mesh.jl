@@ -47,74 +47,75 @@ mutable struct QuadMesh
     new_vertex_pointer
     new_quad_pointer
     growth_factor::Any
-    function QuadMesh(
-        vertices,
-        connectivity,
-        q2q,
-        e2e,
-        degree,
-        vertex_on_boundary;
-        quad_buffer = 100,
-        vertex_buffer = 150,
-        growth_factor = 2,
+end
+
+function QuadMesh(
+    vertices,
+    connectivity,
+    q2q,
+    e2e,
+    degree,
+    vertex_on_boundary;
+    quad_buffer = 100,
+    vertex_buffer = 150,
+    growth_factor = 2,
+)
+    num_vertices = size(vertices, 2)
+    num_quads = size(connectivity, 2)
+
+    @assert num_vertices <= vertex_buffer
+    @assert num_quads <= quad_buffer
+    @assert size(vertices, 1) == 2
+    @assert size(connectivity, 1) == 4
+    @assert size(q2q, 1) == 4
+    @assert size(e2e, 1) == 4
+    @assert size(q2q, 2) == num_quads
+    @assert size(e2e, 2) == num_quads
+    @assert length(degree) == num_vertices
+    @assert length(vertex_on_boundary) == num_vertices
+
+    _vertices = zeros(2, vertex_buffer)
+    _vertices[:, 1:num_vertices] .= vertices
+
+    _connectivity = zeros(Int, 4, quad_buffer)
+    _connectivity[:, 1:num_quads] .= connectivity
+
+    _q2q = zeros(Int, 4, quad_buffer)
+    _q2q[:, 1:num_quads] .= q2q
+
+    _e2e = zeros(Int, 4, quad_buffer)
+    _e2e[:, 1:num_quads] .= e2e
+
+    _degree = zeros(Int, vertex_buffer)
+    _degree[1:num_vertices] .= degree
+
+    _vertex_on_boundary = falses(vertex_buffer)
+    _vertex_on_boundary[1:num_vertices] .= vertex_on_boundary
+
+    active_vertex = falses(vertex_buffer)
+    active_vertex[1:num_vertices] .= true
+
+    active_quad = falses(quad_buffer)
+    active_quad[1:num_quads] .= true
+
+    new_vertex_pointer = num_vertices + 1
+    new_quad_pointer = num_quads + 1
+
+    return QuadMesh(
+        _vertices,
+        _connectivity,
+        _q2q,
+        _e2e,
+        _degree,
+        _vertex_on_boundary,
+        active_vertex,
+        active_quad,
+        num_vertices,
+        num_quads,
+        new_vertex_pointer,
+        new_quad_pointer,
+        growth_factor,
     )
-        num_vertices = size(vertices, 2)
-        num_quads = size(connectivity, 2)
-
-        @assert num_vertices <= vertex_buffer
-        @assert num_quads <= quad_buffer
-        @assert size(vertices, 1) == 2
-        @assert size(connectivity, 1) == 4
-        @assert size(q2q, 1) == 4
-        @assert size(e2e, 1) == 4
-        @assert size(q2q, 2) == num_quads
-        @assert size(e2e, 2) == num_quads
-        @assert length(degree) == num_vertices
-        @assert length(vertex_on_boundary) == num_vertices
-
-        _vertices = zeros(2, vertex_buffer)
-        _vertices[:, 1:num_vertices] .= vertices
-
-        _connectivity = zeros(Int, 4, quad_buffer)
-        _connectivity[:, 1:num_quads] .= connectivity
-
-        _q2q = zeros(Int, 4, quad_buffer)
-        _q2q[:, 1:num_quads] .= q2q
-
-        _e2e = zeros(Int, 4, quad_buffer)
-        _e2e[:, 1:num_quads] .= e2e
-
-        _degree = zeros(Int, vertex_buffer)
-        _degree[1:num_vertices] .= degree
-
-        _vertex_on_boundary = falses(vertex_buffer)
-        _vertex_on_boundary[1:num_vertices] .= vertex_on_boundary
-
-        active_vertex = falses(vertex_buffer)
-        active_vertex[1:num_vertices] .= true
-
-        active_quad = falses(quad_buffer)
-        active_quad[1:num_quads] .= true
-
-        new_vertex_pointer = num_vertices + 1
-        new_quad_pointer = num_quads + 1
-
-        new(
-            _vertices,
-            _connectivity,
-            _q2q,
-            _e2e,
-            _degree,
-            _vertex_on_boundary,
-            active_vertex,
-            active_quad,
-            num_vertices,
-            num_quads,
-            new_vertex_pointer,
-            new_quad_pointer,
-            growth_factor,
-        )
-    end
 end
 
 
@@ -486,28 +487,24 @@ function vertex_degrees(edges, num_vertices)
     return degrees
 end
 
-function resize_and_zero_pad_matrix(matrix, total_size)
-    numrows, numcols = size(matrix)
-    @assert numcols <= total_size
-    num_new_cols = total_size - numcols
-    return zero_pad_matrix_cols(matrix, num_new_cols)
-end
-
 function reindex_quads!(mesh::QuadMesh)
     quad_buffer_size = quad_buffer(mesh)
     new_quad_indices = zeros(Int, quad_buffer_size)
     num_quads = number_of_quads(mesh)
     new_quad_indices[mesh.active_quad] .= 1:num_quads
     
+    new_buffer_size = mesh.growth_factor * num_quads
+
     new_q2q = active_quad_q2q(mesh)
     new_q2q = [q > 0 ? new_quad_indices[q] : 0 for q in new_q2q]
-    mesh.q2q = resize_and_zero_pad_matrix(new_q2q, quad_buffer_size)
+    mesh.q2q = resize_and_zero_pad_matrix(new_q2q, new_buffer_size)
 
-    mesh.connectivity = resize_and_zero_pad_matrix(active_quad_connectivity(mesh), quad_buffer_size)
-    mesh.e2e = resize_and_zero_pad_matrix(active_quad_e2e(mesh), quad_buffer_size)
+    mesh.connectivity = resize_and_zero_pad_matrix(active_quad_connectivity(mesh), new_buffer_size)
+    mesh.e2e = resize_and_zero_pad_matrix(active_quad_e2e(mesh), new_buffer_size)
 
-    mesh.active_quad = falses(quad_buffer_size)
+    mesh.active_quad = falses(new_buffer_size)
     mesh.active_quad[1:num_quads] .= true
+    mesh.new_quad_pointer = num_quads + 1
 
     return new_quad_indices
 end
@@ -519,17 +516,18 @@ function reindex_vertices!(mesh::QuadMesh)
     active_vertices = mesh.active_vertex
     new_vertex_indices[active_vertices] .= 1:num_vertices
     
-    mesh.vertices = resize_and_zero_pad_matrix(active_vertex_coordinates(mesh), vertex_buffer_size)
+    new_buffer_size = mesh.growth_factor * num_vertices
+
+    mesh.vertices = resize_and_zero_pad_matrix(active_vertex_coordinates(mesh), new_buffer_size)
 
     active_conn = active_quad_connectivity(mesh)
     new_conn = [new_vertex_indices[v] for v in active_conn]
     mesh.connectivity[:, mesh.active_quad] .= new_conn
 
-    num_extra_verts = vertex_buffer_size - num_vertices
-    mesh.degree = [mesh.degree[active_vertices]; zeros(Int, num_extra_verts)]
-    mesh.vertex_on_boundary = [mesh.vertex_on_boundary[active_vertices]; falses(num_extra_verts)]
-
-    mesh.active_vertex = [trues(num_vertices); falses(num_extra_verts)]
+    mesh.degree = resize_and_zero_pad_vector(mesh.degree[active_vertices], new_buffer_size)
+    mesh.vertex_on_boundary = resize_and_zero_pad_vector(mesh.vertex_on_boundary[active_vertices], new_buffer_size)
+    mesh.active_vertex = resize_and_zero_pad_vector(trues(num_vertices), new_buffer_size)
+    mesh.new_vertex_pointer = num_vertices + 1
 
     return new_vertex_indices
 end

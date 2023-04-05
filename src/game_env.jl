@@ -73,8 +73,7 @@ end
 function synchronize_desired_degree_size!(env)
     vertex_buffer_size = vertex_buffer(env.mesh)
     if vertex_buffer_size > length(env.desired_degree)
-        num_new_vertices = vertex_buffer_size - length(env.desired_degree)
-        env.desired_degree = zero_pad_vector(env.desired_degree, num_new_vertices)
+        env.desired_degree = resize_and_zero_pad_vector(env.desired_degree, vertex_buffer_size)
     end
 end
 
