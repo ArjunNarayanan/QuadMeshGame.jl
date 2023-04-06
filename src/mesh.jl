@@ -47,6 +47,7 @@ mutable struct QuadMesh
     new_vertex_pointer
     new_quad_pointer
     growth_factor::Any
+    is_geometric_vertex
 end
 
 function QuadMesh(
@@ -55,10 +56,11 @@ function QuadMesh(
     q2q,
     e2e,
     degree,
-    vertex_on_boundary;
-    quad_buffer = 100,
-    vertex_buffer = 150,
-    growth_factor = 2,
+    vertex_on_boundary,
+    quad_buffer,
+    vertex_buffer,
+    growth_factor,
+    is_geometric_vertex
 )
     num_vertices = size(vertices, 2)
     num_quads = size(connectivity, 2)
@@ -73,6 +75,7 @@ function QuadMesh(
     @assert size(e2e, 2) == num_quads
     @assert length(degree) == num_vertices
     @assert length(vertex_on_boundary) == num_vertices
+    @assert length(is_geometric_vertex) == num_vertices
 
     _vertices = zeros(2, vertex_buffer)
     _vertices[:, 1:num_vertices] .= vertices
@@ -91,6 +94,9 @@ function QuadMesh(
 
     _vertex_on_boundary = falses(vertex_buffer)
     _vertex_on_boundary[1:num_vertices] .= vertex_on_boundary
+
+    _is_geometric_vertex = falses(vertex_buffer)
+    _is_geometric_vertex[1:num_vertices] .= is_geometric_vertex
 
     active_vertex = falses(vertex_buffer)
     active_vertex[1:num_vertices] .= true
@@ -115,6 +121,7 @@ function QuadMesh(
         new_vertex_pointer,
         new_quad_pointer,
         growth_factor,
+        _is_geometric_vertex
     )
 end
 
@@ -123,7 +130,8 @@ function QuadMesh(
     vertices,
     connectivity,
     q2q,
-    e2e;
+    e2e,
+    is_geometric_vertex = nothing;
     growth_factor = 2,
 )
     num_vertices = size(vertices, 2)
@@ -139,6 +147,10 @@ function QuadMesh(
     vertex_on_boundary = falses(num_vertices)
     vertex_on_boundary[bnd_nodes] .= true
 
+    if isnothing(is_geometric_vertex)
+        is_geometric_vertex = copy(vertex_on_boundary)
+    end
+
     degrees = vertex_degrees(edges, num_vertices)
 
     return QuadMesh(
@@ -148,13 +160,14 @@ function QuadMesh(
         e2e,
         degrees,
         vertex_on_boundary,
-        quad_buffer = quad_buffer,
-        vertex_buffer = vertex_buffer,
-        growth_factor = growth_factor,
+        quad_buffer,
+        vertex_buffer,
+        growth_factor,
+        is_geometric_vertex
     )
 end
 
-function QuadMesh(vertices, connectivity)
+function QuadMesh(vertices, connectivity; is_geometric_vertex = nothing)
     @assert ndims(vertices) == 2
     @assert ndims(connectivity) == 2
     dim, nverts = size(vertices)
@@ -163,7 +176,7 @@ function QuadMesh(vertices, connectivity)
     @assert nv == 4
 
     q2q, e2e = make_quad_connectivity(connectivity)
-    return QuadMesh(vertices, connectivity, q2q, e2e)
+    return QuadMesh(vertices, connectivity, q2q, e2e, is_geometric_vertex)
 end
 
 function number_of_vertices(mesh::QuadMesh)
@@ -236,6 +249,10 @@ function expand_vertices!(mesh::QuadMesh)
     active_vertex = falses(new_vert_buff_size)
     active_vertex[1:vb] .= mesh.active_vertex
     mesh.active_vertex = active_vertex
+
+    is_geometric_vertex = falses(new_vert_buff_size)
+    is_geometric_vertex[1:vb] .= mesh.is_geometric_vertex
+    mesh.is_geometric_vertex = is_geometric_vertex
 end
 
 function is_active_quad(mesh::QuadMesh, quad)
@@ -253,6 +270,10 @@ end
 
 function is_active_vertex(mesh::QuadMesh, vertex)
     return mesh.active_vertex[vertex]
+end
+
+function is_geometric_vertex(mesh::QuadMesh, vertex)
+    return mesh.is_geometric_vertex[vertex]
 end
 
 function has_neighbor(mesh::QuadMesh, quad, edge)
@@ -398,6 +419,11 @@ function set_on_boundary!(mesh, vertex, on_boundary)
     mesh.vertex_on_boundary[vertex] = on_boundary
 end
 
+function set_is_geometric!(mesh, vertex, is_geometric)
+    @assert is_active_vertex(mesh, vertex)
+    mesh.is_geometric_vertex[vertex] = is_geometric
+end
+
 function insert_vertex!(mesh::QuadMesh, coords, deg, on_boundary)
     new_idx = mesh.new_vertex_pointer
 
@@ -410,6 +436,8 @@ function insert_vertex!(mesh::QuadMesh, coords, deg, on_boundary)
     mesh.degree[new_idx] = deg
     mesh.active_vertex[new_idx] = true
     mesh.vertex_on_boundary[new_idx] = on_boundary
+    mesh.is_geometric_vertex[new_idx] = false
+
     mesh.num_vertices += 1
     mesh.new_vertex_pointer += 1
 
@@ -418,7 +446,10 @@ end
 
 function delete_vertex!(mesh::QuadMesh, idx)
     @assert is_active_vertex(mesh, idx)
+
     mesh.active_vertex[idx] = false
+    mesh.vertex_on_boundary[idx] = false
+    mesh.is_geometric_vertex[idx] = false
     mesh.degree[idx] = 0
     mesh.num_vertices -= 1
 end
@@ -526,6 +557,7 @@ function reindex_vertices!(mesh::QuadMesh)
 
     mesh.degree = resize_and_zero_pad_vector(mesh.degree[active_vertices], new_buffer_size)
     mesh.vertex_on_boundary = resize_and_zero_pad_vector(mesh.vertex_on_boundary[active_vertices], new_buffer_size)
+    mesh.is_geometric_vertex = resize_and_zero_pad_vector(mesh.is_geometric_vertex[active_vertices], new_buffer_size)
     mesh.active_vertex = resize_and_zero_pad_vector(trues(num_vertices), new_buffer_size)
     mesh.new_vertex_pointer = num_vertices + 1
 

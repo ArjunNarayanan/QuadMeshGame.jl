@@ -67,6 +67,11 @@ function collapse!(mesh, quad, edge, maxdegree = 7)
         set_on_boundary!(mesh, v1, true)
     end
 
+    # if v3 is_geometric, set v1 to be geometric 
+    if is_geometric_vertex(mesh, v3)
+        set_is_geometric!(mesh, v1, true)
+    end
+
     ol1, ol2, ol3, ol4 = (twin(mesh, quad, i) for i in (l1, l2, l3, l4))
     q1, q2, q3, q4 = (neighbor(mesh, quad, i) for i in (l1, l2, l3, l4))
     

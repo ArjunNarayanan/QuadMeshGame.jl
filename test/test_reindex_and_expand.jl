@@ -30,6 +30,7 @@ num_quads = 2
 new_vertex_pointer = 7
 new_quad_pointer = 11
 growth_factor = 2
+is_geometric_vertex = trues(6)
 
 mesh = QM.QuadMesh(
     vertices, 
@@ -44,7 +45,8 @@ mesh = QM.QuadMesh(
     num_quads, 
     new_vertex_pointer, 
     new_quad_pointer, 
-    growth_factor
+    growth_factor,
+    is_geometric_vertex
 )
 
 QM.reindex_quads!(mesh)
@@ -76,6 +78,7 @@ test_degree = [2,2,3,3,2,2]
 
 @test allequal(mesh.vertex_on_boundary, vertex_on_boundary)
 @test allequal(mesh.active_vertex, active_vertex)
+@test allequal(mesh.is_geometric_vertex, is_geometric_vertex)
 
 test_active_quad = falses(4)
 test_active_quad[[1,2]] .= true
@@ -117,6 +120,8 @@ num_quads = 2
 new_vertex_pointer = 16
 new_quad_pointer = 11
 growth_factor = 2
+is_geometric_vertex = falses(15)
+is_geometric_vertex[10:15] .= true
 
 mesh = QM.QuadMesh(
     vertices, 
@@ -131,7 +136,8 @@ mesh = QM.QuadMesh(
     num_quads, 
     new_vertex_pointer, 
     new_quad_pointer, 
-    growth_factor
+    growth_factor,
+    is_geometric_vertex
 )
 
 QM.reindex_vertices!(mesh)
@@ -168,6 +174,10 @@ test_degree[1:6] = [2,2,3,3,2,2]
 vertex_on_boundary = falses(12)
 vertex_on_boundary[1:6] .= true
 @test allequal(vertex_on_boundary, mesh.vertex_on_boundary)
+
+is_geometric_vertex = falses(12)
+is_geometric_vertex[1:6] .= true
+@test allequal(mesh.is_geometric_vertex, is_geometric_vertex)
 
 active_vertex = falses(12)
 active_vertex[1:6] .= true
@@ -217,6 +227,8 @@ num_quads = 2
 new_vertex_pointer = 16
 new_quad_pointer = 11
 growth_factor = 2
+is_geometric_vertex = falses(15)
+is_geometric_vertex[10:15] .= true
 
 mesh = QM.QuadMesh(
     vertices, 
@@ -231,7 +243,8 @@ mesh = QM.QuadMesh(
     num_quads, 
     new_vertex_pointer, 
     new_quad_pointer, 
-    growth_factor
+    growth_factor,
+    is_geometric_vertex
 )
 
 QM.reindex_vertices!(mesh)
@@ -269,6 +282,10 @@ test_degree[1:6] = [2,2,3,3,2,2]
 vertex_on_boundary = falses(12)
 vertex_on_boundary[1:6] .= true
 @test allequal(vertex_on_boundary, mesh.vertex_on_boundary)
+
+is_geometric_vertex = falses(12)
+is_geometric_vertex[1:6] .= true
+@test allequal(is_geometric_vertex, mesh.is_geometric_vertex)
 
 active_vertex = falses(12)
 active_vertex[1:6] .= true
