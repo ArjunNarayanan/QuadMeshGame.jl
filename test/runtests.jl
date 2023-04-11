@@ -28,6 +28,10 @@ end
     include("test_boundary_split.jl")
 end
 
+@testset "test cleanup" begin
+    include("test_cleanup.jl")
+end
+
 @testset "test distance to boundary" begin
     include("test_distance_to_boundary.jl")
 end

@@ -273,6 +273,7 @@ function is_active_vertex(mesh::QuadMesh, vertex)
 end
 
 function is_geometric_vertex(mesh::QuadMesh, vertex)
+    @assert is_active_vertex(mesh, vertex)
     return mesh.is_geometric_vertex[vertex]
 end
 
