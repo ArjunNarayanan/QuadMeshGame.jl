@@ -303,5 +303,65 @@ vs = [0,0,0,0,0,-1,0,0,1,0,0,0,0,0]
 
 
 # ############################################################################################################
+# test cleanup_env
 
+mesh = QM.square_mesh(2)
+original_vertices = QM.active_vertex_coordinates(mesh)
+is_geometric_vertex = falses(9)
+is_geometric_vertex[[1,3,7,9]] .= true
+mesh = QM.QuadMesh(
+    QM.active_vertex_coordinates(mesh),
+    QM.active_quad_connectivity(mesh),
+    is_geometric_vertex=is_geometric_vertex
+)
+
+
+desired_degree = [2,4,2,2,3,2,3,3,3]
+env = QM.GameEnv(mesh, desired_degree)
+
+@test sum(abs.(env.vertex_score)) == 6
+
+QM.cleanup_env!(env, 5)
+test_vertex_score = [0,0,-1,-1]
+@test allequal(QM.active_vertex_score(env), test_vertex_score)
+@test sum(abs.(env.vertex_score)) == 2
+# ############################################################################################################
+
+
+
+# ############################################################################################################
+# more complex example
+
+vertices = QM.make_vertices(5)
+connectivity = [
+    7 12 13 8
+    13 18 19 14
+    3 8 9 4
+    17 22 23 18
+    1 6 7 2
+    14 19 20 15
+    11 16 17 12
+    4 9 10 5
+    6 11 12 7
+    12 17 18 13
+    19 24 25 20
+    18 23 24 19
+    16 21 22 17
+    8 13 14 9
+    9 14 15 10
+    2 7 8 3
+]
+is_geometric_vertex = falses(25)
+is_geometric_vertex[[1,5,21,25]] .= true
+mesh = QM.QuadMesh(vertices, connectivity', is_geometric_vertex=is_geometric_vertex)
+
+d0 = QM.active_vertex_degrees(mesh)
+d0[.!is_geometric_vertex] .= 5
+env = QM.GameEnv(mesh, d0)
+
+@test sum(abs.(env.vertex_score)) == 33
+
+QM.cleanup_env!(env, 10)
+
+@test all(env.vertex_score .== 0)
 # ############################################################################################################

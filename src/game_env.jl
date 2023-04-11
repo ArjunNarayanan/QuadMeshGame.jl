@@ -126,6 +126,17 @@ function step_global_split_without_loops!(env, quad_idx, half_edge_idx, maxsteps
     return success
 end
 
+function cleanup_env!(env, maxsteps)
+    tracker = Tracker()
+    cleanup_mesh!(env.mesh, maxsteps, tracker)
+
+    for deleted_vertex in tracker.new_vertex_ids
+        env.desired_degree[deleted_vertex] = 0
+    end
+
+    update_env_after_action!(env)
+end
+
 function step_boundary_split!(env, quad_idx, half_edge_idx; maxdegree = 7, new_boundary_desired_degree = 3)
     success = false
     if is_valid_boundary_split(env.mesh, quad_idx, half_edge_idx, maxdegree)
