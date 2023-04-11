@@ -146,7 +146,13 @@ mesh = QM.QuadMesh(vertices, connectivity', is_geometric_vertex=is_geometric_ver
 @test QM.is_valid_cleanup(mesh, 1, 2, 10)
 # test throws assertion error if nbr quad in merge has a higher index than self
 @test_throws AssertionError QM._step_cleanup_merge!(mesh, 1, 2)
-@test QM.step_cleanup_merge!(mesh, 1, 2)
+
+tracker = QM.Tracker()
+@test QM.step_cleanup_merge!(mesh, 1, 2, tracker)
+
+@test allequal(tracker.new_vertex_ids, [3])
+@test allequal(tracker.on_boundary, [true])
+
 QM.delete_vertex!(mesh, 4)
 
 @test QM.number_of_vertices(mesh) == 4
@@ -175,6 +181,7 @@ test_vertex_on_boundary = trues(4)
 ########################################################################################################################
 # test multistep merge
 
+
 mesh = QM.square_mesh(2)
 original_vertices = QM.active_vertex_coordinates(mesh)
 is_geometric_vertex = falses(9)
@@ -186,7 +193,12 @@ mesh = QM.QuadMesh(
 )
 
 @test QM.is_valid_cleanup(mesh, 1, 2, 5)
-@test QM.step_cleanup_merge!(mesh, 1, 2)
+
+tracker = QM.Tracker()
+@test QM.step_cleanup_merge!(mesh, 1, 2, tracker)
+
+@test allequal(tracker.new_vertex_ids, [4])
+@test allequal(tracker.on_boundary, [true])
 
 @test QM.number_of_quads(mesh) == 3
 @test QM.number_of_vertices(mesh) == 8
@@ -215,7 +227,11 @@ test_e2e = [
 ]
 @test allequal(QM.active_quad_e2e(mesh), test_e2e')
 
-@test QM.step_cleanup_merge!(mesh, 2, 2)
+@test QM.step_cleanup_merge!(mesh, 2, 2, tracker)
+
+@test allequal(tracker.new_vertex_ids, [4,5])
+@test allequal(tracker.on_boundary, [true,false])
+
 QM.delete_vertex!(mesh, 6)
 
 @test QM.number_of_quads(mesh) == 2
@@ -257,7 +273,11 @@ mesh = QM.QuadMesh(
     is_geometric_vertex=is_geometric_vertex
 )
 
-@test QM.cleanup_path!(mesh, 1, 2, 5)
+tracker = QM.Tracker()
+@test QM.cleanup_path!(mesh, 1, 2, 5, tracker)
+
+@test allequal(tracker.new_vertex_ids, [4,5,6])
+@test allequal(tracker.on_boundary, [true,false,true])
 
 @test QM.number_of_quads(mesh) == 2
 @test QM.number_of_vertices(mesh) == 6
@@ -293,7 +313,10 @@ test_vertex_on_boundary = trues(6)
 
 @test QM.is_valid_cleanup(mesh, 4, 1, 5)
 
-@test QM.cleanup_path!(mesh, 4, 1, 5)
+@test QM.cleanup_path!(mesh, 4, 1, 5, tracker)
+
+@test allequal(tracker.new_vertex_ids, [4,5,6,2,8])
+@test allequal(tracker.on_boundary, [true,false,true,true,true])
 
 @test QM.number_of_quads(mesh) == 1
 @test QM.number_of_vertices(mesh) == 4
@@ -327,7 +350,11 @@ mesh = QM.QuadMesh(
     is_geometric_vertex=is_geometric_vertex
 )
 
-QM.cleanup!(mesh, 5)
+tracker = QM.Tracker()
+QM.cleanup_mesh!(mesh, 5, tracker)
+
+@test allequal(tracker.new_vertex_ids, [4,5,6,8,2])
+@test allequal(tracker.on_boundary, [true,false,true,true,true])
 
 @test QM.number_of_quads(mesh) == 1
 @test QM.number_of_vertices(mesh) == 4
@@ -381,7 +408,11 @@ is_geometric_vertex = falses(25)
 is_geometric_vertex[[1,5,21,25]] .= true
 mesh = QM.QuadMesh(vertices, connectivity', is_geometric_vertex=is_geometric_vertex)
 
-QM.cleanup!(mesh, 10)
+tracker = QM.Tracker()
+QM.cleanup_mesh!(mesh, 10, tracker)
+
+@test allequal(tracker.new_vertex_ids, [3,8,13,18,23,6,7,9,10,15,14,12,11,16,17,19,20,22,2,4,24])
+@test allequal(tracker.on_boundary, [true,false,false,false,true,true,false,false,true,true,false,false,true,true,false,false,true,true,true,true,true])
 
 @test QM.number_of_quads(mesh) == 1
 @test QM.number_of_vertices(mesh) == 4

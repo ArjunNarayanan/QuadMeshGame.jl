@@ -103,7 +103,7 @@ function _step_cleanup_merge!(mesh, quad, half_edge)
     return true
 end
 
-function step_cleanup_merge!(mesh, quad, half_edge)
+function step_cleanup_merge!(mesh, quad, half_edge, tracker)
     @assert has_neighbor(mesh, quad, half_edge)
     vertex_to_delete = vertex(mesh, quad, half_edge)
 
@@ -113,13 +113,15 @@ function step_cleanup_merge!(mesh, quad, half_edge)
     else
         _step_cleanup_merge!(mesh, nbr_quad, nbr_half_edge)
     end
-
+    
+    on_boundary = vertex_on_boundary(mesh, vertex_to_delete)
+    update_tracker!(tracker, vertex_to_delete, on_boundary)
     delete_vertex!(mesh, vertex_to_delete)
     
     return true 
 end
 
-function cleanup_path!(mesh, quad, half_edge, maxsteps)
+function cleanup_path!(mesh, quad, half_edge, maxsteps, tracker)
     if !is_valid_cleanup(mesh, quad, half_edge, maxsteps)
         return false
     end
@@ -134,7 +136,7 @@ function cleanup_path!(mesh, quad, half_edge, maxsteps)
         nbr_quad = neighbor(mesh, quad, next_half_edge)
         nbr_half_edge = next(twin(mesh, quad, next_half_edge))
 
-        step_cleanup_merge!(mesh, quad, half_edge)
+        step_cleanup_merge!(mesh, quad, half_edge, tracker)
 
         quad = nbr_quad
         half_edge = nbr_half_edge
@@ -145,19 +147,21 @@ function cleanup_path!(mesh, quad, half_edge, maxsteps)
     nbr_quad = neighbor(mesh, quad, half_edge)
     nbr_half_edge = twin(mesh, quad, half_edge)
     vertex_to_delete = vertex(mesh, nbr_quad, nbr_half_edge)
+    on_boundary = vertex_on_boundary(mesh, vertex_to_delete)
     
-    step_cleanup_merge!(mesh, quad, half_edge)
+    step_cleanup_merge!(mesh, quad, half_edge, tracker)
     delete_vertex!(mesh, vertex_to_delete)
+    update_tracker!(tracker, vertex_to_delete, on_boundary)
 
     return true
 end
 
-function cleanup!(mesh, maxsteps)
+function cleanup_mesh!(mesh, maxsteps, tracker)
     quad_buffer_size = quad_buffer(mesh)
     for quad_idx in 1:quad_buffer_size
         for half_edge_idx in 1:4
             if is_active_quad(mesh, quad_idx) && is_valid_cleanup(mesh, quad_idx, half_edge_idx, maxsteps)
-                @assert cleanup_path!(mesh, quad_idx, half_edge_idx, maxsteps)
+                @assert cleanup_path!(mesh, quad_idx, half_edge_idx, maxsteps, tracker)
             end
         end
     end
