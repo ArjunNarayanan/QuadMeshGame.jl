@@ -565,6 +565,11 @@ function reindex_vertices!(mesh::QuadMesh)
     return new_vertex_indices
 end
 
+function reindex!(mesh::QuadMesh)
+    reindex_quads!(mesh)
+    reindex_vertices!(mesh)
+end
+
 function averagesmoothing(points, connectivity, q2q, active_quads, boundary_nodes)
     num_points = size(points, 2)
     new_points = similar(points)
