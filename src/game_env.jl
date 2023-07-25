@@ -14,7 +14,7 @@ function GameEnv(mesh, d0)
 
     nvb = vertex_buffer(mesh)
 
-    exp_d0 = zeros(Int, nvb)
+    exp_d0 = zeros(eltype(d0), nvb)
     exp_d0[mesh.active_vertex] .= d0
     vertex_score = mesh.degree - exp_d0
 
@@ -246,7 +246,7 @@ function make_level4_template(mesh)
 end
 
 function reindexed_desired_degree(old_desired_degree, new_vertex_indices, buffer_size)
-    new_desired_degree = zeros(Int, buffer_size)
+    new_desired_degree = zeros(eltype(old_desired_degree), buffer_size)
     for (old_idx, desired_degree) in enumerate(old_desired_degree)
         new_idx = new_vertex_indices[old_idx]
         if new_idx > 0
