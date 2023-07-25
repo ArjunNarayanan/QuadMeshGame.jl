@@ -11,10 +11,10 @@ QM = QuadMeshGame
 @test QM.enclosed_angle([1,1],[1,-1]) == 270
 @test QM.enclosed_angle([1,0],[1,-eps()]) == 360
 
-@test all(QM.desired_degree.(0:120) .== 2)
-@test all(QM.desired_degree.(121:216) .== 3)
-@test all(QM.desired_degree.(217:308) .== 4)
-@test all(QM.desired_degree.(309:360) .== 5)
+@test all(QM.rounded_desired_degree.(1:135) .== 2)
+@test all(QM.rounded_desired_degree.(136:224) .== 3)
+@test all(QM.rounded_desired_degree.(225:315) .== 4)
+@test all(QM.rounded_desired_degree.(316:360) .== 5)
 
 mesh = QM.square_mesh(2)
 d0 = copy(mesh.degree[mesh.active_vertex])
