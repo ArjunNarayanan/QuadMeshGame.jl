@@ -46,12 +46,14 @@ function polygon_interior_angles(p)
     return angles
 end
 
-function desired_degree(angle; target_angle = 90)
-    n = 2
-    while abs(target_angle - angle/n) < abs(target_angle - angle/(n-1))
-        n += 1
-    end
-    return n
+function rounded_desired_degree(angle, target_angle=90)
+    degree = max(round(angle/target_angle + 1), 2)
+    return degree
+end
+
+function continuous_desired_degree(angle, target_angle=90)
+    degree = max(angle/target_angle + 1, 2)
+    return degree
 end
 
 function pad_vector(vec, num_new_entries, value)
