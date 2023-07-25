@@ -47,12 +47,12 @@ function polygon_interior_angles(p)
 end
 
 function rounded_desired_degree(angle, target_angle=90)
-    degree = max(round(angle/target_angle + 1), 2)
+    degree = max(round(Int, angle/target_angle + 1), 2)
     return degree
 end
 
 function continuous_desired_degree(angle, target_angle=90)
-    degree = max(angle/target_angle + 1, 2)
+    degree = max(angle/target_angle + 1.0, 2.0)
     return degree
 end
 
