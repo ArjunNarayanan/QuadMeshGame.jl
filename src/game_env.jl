@@ -245,6 +245,25 @@ function make_level4_template(mesh)
     return template
 end
 
+function level4_half_edge_template(mesh)
+    pairs = make_edge_pairs(mesh)
+    x = reshape(1:length(pairs), 1, :)
+
+    cx = cycle_edges(x)
+
+    pcx = zero_pad_matrix_cols(cx, 1)[:, pairs][3:end, :]
+    cpcx = cycle_edges(pcx)
+
+    pcpcx = zero_pad_matrix_cols(cpcx, 1)[:, pairs][3:end, :]
+    cpcpcx = cycle_edges(pcpcx)
+
+    pcpcpcx = zero_pad_matrix_cols(cpcpcx, 1)[:, pairs][7:end, :]
+    cpcpcpcx = cycle_edges(pcpcpcx)
+
+    template = vcat(cx, cpcx, cpcpcx, cpcpcpcx)
+    return template
+end
+
 function reindexed_desired_degree(old_desired_degree, new_vertex_indices, buffer_size)
     new_desired_degree = zeros(eltype(old_desired_degree), buffer_size)
     for (old_idx, desired_degree) in enumerate(old_desired_degree)
